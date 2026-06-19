@@ -1,0 +1,7 @@
+#!/usr/bin/env bash
+set -euo pipefail
+IFS=$'\n\t'
+
+bundle install
+
+# Add project-specific setup below (e.g. seed cassettes, copy .env).
