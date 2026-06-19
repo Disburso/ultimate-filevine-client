@@ -2,7 +2,7 @@ plugins:
   - rubocop-rspec
 
 AllCops:
-  TargetRubyVersion: 3.1
+  TargetRubyVersion: 3.2
   NewCops: enable
   SuggestExtensions: false
   Exclude:
@@ -24,6 +24,13 @@ Metrics/BlockLength:
     - "*.gemspec"
     - "Rakefile"
     - "spec/**/*"
+
+Metrics/MethodLength:
+  Max: 15
+
+# Keyword-argument constructors (e.g. Configuration) are idiomatic and clear.
+Metrics/ParameterLists:
+  CountKeywordArgs: false
 
 # One class/module per file; documented public API is a docs concern, not a lint gate.
 Style/Documentation:

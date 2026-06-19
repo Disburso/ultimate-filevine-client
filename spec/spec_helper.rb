@@ -1,5 +1,6 @@
 # frozen_string_literal: true
 
+require "json"
 require "ultimate_filevine_client"
 
 require "webmock/rspec" # disables real network connections by default
