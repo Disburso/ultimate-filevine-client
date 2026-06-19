@@ -30,6 +30,11 @@ module UltimateFilevineClient
       @authenticator.access_token
     end
 
+    # The Projects resource. @return [Resources::Projects]
+    def projects
+      @projects ||= Resources::Projects.new(self)
+    end
+
     # Low-level request helpers, delegated to the per-tenant connection.
     Connection::HTTP_METHODS.each do |verb|
       define_method(verb) do |path, **kwargs|

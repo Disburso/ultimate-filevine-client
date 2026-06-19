@@ -35,6 +35,16 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
     a `#user_orgs` bootstrap (`POST /fv-app/v2/utils/GetUserOrgsWithToken`).
   - `Configuration#with` for immutable updates (e.g. populating org_id/user_id
     after bootstrap); token cache key corrected to depend on credentials only.
+- Resource + pagination layer:
+  - `Pagination::Paginator` — lazy, auto-paging `Enumerable` over offset/limit
+    (`Items`/`HasMore`), fetching pages only as consumed; independent cursor per
+    `#each`, safe to iterate concurrently.
+  - `Entities::Base` + `Entities::Project` — read-only wrappers exposing named
+    fields (`id` unwraps the `ProjectId` Identifier), with raw `[]`/`to_h`.
+  - `Resources::Base` + `Resources::Projects` (`#list`/`#get`/`#create`/`#update`
+    against `/fv-app/v2/Projects`), and `Client#projects`.
+  - VCR-backed end-to-end spec: mint a token then auto-page projects from a
+    committed cassette (`spec/support/cassettes/projects_list.yml`).
 
 ### Changed
 - Raised the Ruby floor to `>= 3.2` to use `Data.define` for value objects.

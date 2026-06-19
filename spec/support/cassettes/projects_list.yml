@@ -1,0 +1,63 @@
+---
+http_interactions:
+- request:
+    method: post
+    uri: https://identity.filevine.com/connect/token
+    body:
+      encoding: UTF-8
+      string: ''
+    headers: {}
+  response:
+    status:
+      code: 200
+      message: OK
+    headers:
+      Content-Type:
+      - application/json
+    body:
+      encoding: UTF-8
+      string: '{"access_token":"<BEARER_TOKEN>","token_type":"Bearer","expires_in":3600,"scope":"fv.api.gateway.access"}'
+    http_version: '1.1'
+  recorded_at: Sat, 20 Jun 2026 00:00:00 GMT
+- request:
+    method: get
+    uri: https://api.filevineapp.com/fv-app/v2/Projects?limit=2&offset=0
+    body:
+      encoding: UTF-8
+      string: ''
+    headers: {}
+  response:
+    status:
+      code: 200
+      message: OK
+    headers:
+      Content-Type:
+      - application/json
+    body:
+      encoding: UTF-8
+      string: '{"Items":[{"ProjectId":{"Native":101,"Partner":null},"ProjectName":"Smith
+        v. Acme","ClientName":"Jane Smith","PhaseName":"Discovery","IsArchived":false},{"ProjectId":{"Native":102,"Partner":null},"ProjectName":"Doe
+        v. Roe","ClientName":"John Doe","PhaseName":"Intake","IsArchived":false}],"Count":2,"Offset":0,"Limit":2,"HasMore":true,"Links":{"next":"/fv-app/v2/Projects?offset=2&limit=2"}}'
+    http_version: '1.1'
+  recorded_at: Sat, 20 Jun 2026 00:00:00 GMT
+- request:
+    method: get
+    uri: https://api.filevineapp.com/fv-app/v2/Projects?limit=2&offset=2
+    body:
+      encoding: UTF-8
+      string: ''
+    headers: {}
+  response:
+    status:
+      code: 200
+      message: OK
+    headers:
+      Content-Type:
+      - application/json
+    body:
+      encoding: UTF-8
+      string: '{"Items":[{"ProjectId":{"Native":103,"Partner":null},"ProjectName":"Roe
+        v. City","ClientName":"Pat Roe","PhaseName":"Settlement","IsArchived":false}],"Count":1,"Offset":2,"Limit":2,"HasMore":false,"Links":{}}'
+    http_version: '1.1'
+  recorded_at: Sat, 20 Jun 2026 00:00:00 GMT
+recorded_with: VCR 6.4.0
