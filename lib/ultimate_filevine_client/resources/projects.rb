@@ -9,22 +9,12 @@ module UltimateFilevineClient
 
       # Auto-paging list of {Entities::Project}. Pass `limit:` and any filter
       # params (e.g. requestedFields:). Lazy — iterate, .first, or .take(n).
-      def list(limit: Pagination::DEFAULT_LIMIT, **params)
-        paginate(PATH, params: params, limit: limit) { |item| Entities::Project.new(item) }
-      end
+      def list(limit: Pagination::DEFAULT_LIMIT, **params) = list_entities(PATH, Entities::Project, limit:, **params)
 
       # @param project_id [Integer, String] the Native project id
-      def get(project_id)
-        Entities::Project.new(connection.get("#{PATH}/#{project_id}").body)
-      end
-
-      def create(attributes)
-        Entities::Project.new(connection.post(PATH, body: attributes).body)
-      end
-
-      def update(project_id, attributes)
-        Entities::Project.new(connection.patch("#{PATH}/#{project_id}", body: attributes).body)
-      end
+      def get(project_id) = fetch_entity("#{PATH}/#{project_id}", Entities::Project)
+      def create(attributes) = create_entity(PATH, Entities::Project, attributes)
+      def update(project_id, attributes) = update_entity("#{PATH}/#{project_id}", Entities::Project, attributes)
     end
   end
 end

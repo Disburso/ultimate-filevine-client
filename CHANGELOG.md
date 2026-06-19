@@ -45,6 +45,18 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
     against `/fv-app/v2/Projects`), and `Client#projects`.
   - VCR-backed end-to-end spec: mint a token then auto-page projects from a
     committed cassette (`spec/support/cassettes/projects_list.yml`).
+- More resources, each with an entity and specs:
+  - `Contacts` (list/get/create/update), `Documents` (list/get/update/delete),
+    `Notes` (list/get/create/update), `Tasks` (list/get, lowercase `/tasks`
+    path), `ProjectTypes` (list/get + auto-paging `#sections`).
+  - Shared `Resources::Base` helpers (`list_entities`/`fetch_entity`/
+    `create_entity`/`update_entity`) and entity classes
+    (`Contact`/`Document`/`Note`/`Task`/`ProjectType`).
+  - `Client` now wires all resource accessors from a `RESOURCES` registry,
+    built eagerly to avoid lazy-memo races.
+- Comprehensive README: quick start, auth + bootstrap, multitenancy/concurrency,
+  configuration options, pluggable token storage, resources, pagination, and the
+  error hierarchy.
 
 ### Changed
 - Raised the Ruby floor to `>= 3.2` to use `Data.define` for value objects.

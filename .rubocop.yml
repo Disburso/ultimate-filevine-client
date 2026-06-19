@@ -31,6 +31,11 @@ Metrics/MethodLength:
 Metrics/AbcSize:
   Max: 20
 
+# `delete` performs a side effect and returns true on success; it is not a query.
+Naming/PredicateMethod:
+  AllowedMethods:
+    - delete
+
 # Keyword-argument constructors (e.g. Configuration) are idiomatic and clear.
 Metrics/ParameterLists:
   CountKeywordArgs: false

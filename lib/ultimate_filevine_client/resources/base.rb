@@ -19,6 +19,23 @@ module UltimateFilevineClient
       def paginate(path, params: {}, limit: Pagination::DEFAULT_LIMIT, &wrap)
         Pagination::Paginator.new(connection: connection, path: path, params: params, limit: limit, &wrap)
       end
+
+      # An auto-paging collection of `entity`-wrapped records.
+      def list_entities(path, entity, limit: Pagination::DEFAULT_LIMIT, **params)
+        paginate(path, params: params, limit: limit) { |item| entity.new(item) }
+      end
+
+      def fetch_entity(path, entity)
+        entity.new(connection.get(path).body)
+      end
+
+      def create_entity(path, entity, attributes)
+        entity.new(connection.post(path, body: attributes).body)
+      end
+
+      def update_entity(path, entity, attributes)
+        entity.new(connection.patch(path, body: attributes).body)
+      end
     end
   end
 end

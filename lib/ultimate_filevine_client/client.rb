@@ -16,12 +16,24 @@ module UltimateFilevineClient
     # the bearer token, so it works before org_id/user_id are known.
     USER_ORGS_PATH = "/fv-app/v2/utils/GetUserOrgsWithToken"
 
+    # Resource accessors -> their classes. Built eagerly (stateless, cheap) so
+    # there is no lazy-memo race under concurrent first use.
+    RESOURCES = {
+      projects: Resources::Projects,
+      contacts: Resources::Contacts,
+      documents: Resources::Documents,
+      notes: Resources::Notes,
+      tasks: Resources::Tasks,
+      project_types: Resources::ProjectTypes
+    }.freeze
+
     attr_reader :config, :authenticator, :connection
 
     def initialize(config:)
       @config = config
       @authenticator = Auth::Authenticator.new(config: config)
       @connection = Connection.new(config: config, authenticator: @authenticator)
+      @resources = RESOURCES.transform_values { |klass| klass.new(self) }
     end
 
     # A valid bearer token for this tenant, minted/refreshed as needed.
@@ -30,9 +42,8 @@ module UltimateFilevineClient
       @authenticator.access_token
     end
 
-    # The Projects resource. @return [Resources::Projects]
-    def projects
-      @projects ||= Resources::Projects.new(self)
+    RESOURCES.each_key do |name|
+      define_method(name) { @resources.fetch(name) }
     end
 
     # Low-level request helpers, delegated to the per-tenant connection.
