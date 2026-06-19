@@ -1,0 +1,26 @@
+# Secrets / environment — never commit credentials (see AGENTS.md)
+.env
+.env.*
+!.env.example
+
+# Bundler / dependencies
+/.bundle/
+/vendor/bundle/
+
+# A gem (library) does not commit its lockfile
+/Gemfile.lock
+
+# Build artifacts
+/pkg/
+/tmp/
+/coverage/
+/doc/
+/.yardoc/
+*.gem
+
+# RSpec / VCR
+/spec/examples.txt
+
+# Editor / OS cruft
+.DS_Store
+*.swp

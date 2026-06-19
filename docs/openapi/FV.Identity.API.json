@@ -1,0 +1,247 @@
+{
+  "openapi": "3.0.1",
+  "info": {
+    "version": "",
+    "title": "Filevine Identity API"
+  },
+  "servers": [
+    {
+      "url": "https://identity.filevine.com",
+      "description": "FV.Identity OIDC Server"
+    },
+    {
+      "url": "https://api.filevineapp.com",
+      "description": "Filevine v2 public API"
+    }
+  ],
+  "paths": {
+    "/connect/token": {
+      "post": {
+        "tags": [
+          "Token"
+        ],
+        "summary": "Exchange Token",
+        "description": "The Filevine Identity endpoint below will return a bearer token, its expiration time (listed in seconds), and the requested scopes. This token can be used to make authenticated requests to the API Gateway along with x-fv-orgId and x-fv-userId headers. **Requests must have Content-Type = x-www-form-urlencoded**\n\n<!-- theme: warning -->\n\n> #### Please note!\n> ***Your client secret should be treated like a password.***\n> - Store it securely\n> - Don't share it with anyone outside of your company\n> - Don't put it in any code on your website or in a URL.\n\n<!-- theme: info -->\n\n> #### Webhooks \n> In order to use the webhooks, you must add the `filevine.v2.webhooks` scope to the request.\n> _Don't forget that the scopes must be space-separated, not comma-delimited._\n\n<!-- theme: info -->\n\n> #### URL Encoding\n> When exporting to CURL, change `--data 'client_secret=***'` to `--data-urlencode 'client_secret=***'`.\n> For other code or scripting languages, you'll need to URL encode the client secret before using it.\n> When using the \"Try It\" option on this site, no URL encoding is necessary.",
+        "operationId": "POST_token",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/x-www-form-urlencoded": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "client_id": {
+                    "type": "string",
+                    "format": "uuid"
+                  },
+                  "client_secret": {
+                    "type": "string"
+                  },
+                  "grant_type": {
+                    "type": "string",
+                    "example": "personal_access_token"
+                  },
+                  "scope": {
+                    "type": "string",
+                    "example": "fv.api.gateway.access tenant filevine.v2.api.* email openid fv.auth.tenant.read"
+                  },
+                  "token": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "client_id",
+                  "client_secret",
+                  "grant_type",
+                  "scope",
+                  "token"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "access_token": {
+                      "type": "string"
+                    },
+                    "expires_in": {
+                      "type": "integer"
+                    },
+                    "token_type": {
+                      "type": "string"
+                    },
+                    "scope": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "servers": [
+          {
+            "url": "https://identity.filevine.com",
+            "description": "FV.Identity OIDC Server"
+          }
+        ],
+        "x-codegen-request-body-name": "body"
+      }
+    },
+    "/identity/user": {
+      "post": {
+        "tags": [
+          "User"
+        ],
+        "summary": "Create User Invite",
+        "description": "Create a user in Filevine Identity, which allows for authentication to Filevine's suite of applications.\n\nTo grant access to a Filevine org or project, add the identifiers as below in the referenceObject field.\n\nExample:\n\n```json\n{\n  'org': [\n    1234\n  ],\n  'projects': [\n    9876,\n    8765\n  ]\n}\n```",
+        "operationId": "POST_user",
+        "parameters": [
+          {
+            "name": "x-fv-orgid",
+            "in": "header",
+            "description": "The Org Id the requesting user belongs to",
+            "required": true
+          },
+          {
+            "name": "x-fv-userid",
+            "in": "header",
+            "description": "The User Id of the requesting user",
+            "required": true
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateUserRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Returns the id of the created object",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CreateUserResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Validation Failures"
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Access Denied"
+          },
+          "500": {
+            "description": "General Exception"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "servers": [
+          {
+            "url": "https://api.filevineapp.com",
+            "description": "Filevine v2 public API"
+          }
+        ]
+      }
+    }
+  },
+  "components": {
+    "securitySchemes": {
+      "bearerAuth": {
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "JWT"
+      }
+    },
+    "schemas": {
+      "CreateUserRequest": {
+        "type": "object",
+        "properties": {
+          "tenantId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "email": {
+            "type": "string",
+            "example": "AWhitaker@filevine.com"
+          },
+          "firstName": {
+            "type": "string",
+            "nullable": true,
+            "example": "Andrew"
+          },
+          "lastName": {
+            "type": "string",
+            "example": "Whitaker"
+          },
+          "products": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/FilevineProductType"
+            },
+            "example": [
+              "Filevine",
+              "Copilot",
+              "ClientPortal",
+              "LeadDocket",
+              "Outlaw"
+            ]
+          },
+          "referenceObject": {
+            "type": "string",
+            "nullable": true,
+            "description": "A Json string with a list of Org Ids and/or Project Ids to grant the new user access.",
+            "example": "{'Org':[1234,2345],'Projects':[9876,8765]}"
+          }
+        },
+        "required": [
+          "tenantId",
+          "lastName",
+          "products"
+        ]
+      },
+      "FilevineProductType": {
+        "type": "string",
+        "enum": [
+          "Filevine",
+          "Copilot",
+          "ClientPortal",
+          "LeadDocket",
+          "Outlaw",
+          "Timely",
+          "Vinesign",
+          "Payments"
+        ]
+      },
+      "CreateUserResponse": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "userId": {
+            "type": "string",
+            "format": "uuid"
+          }
+        }
+      }
+    }
+  }
+}
