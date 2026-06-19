@@ -13,16 +13,19 @@ module UltimateFilevineClient
     DEFAULT_OPEN_TIMEOUT = 10
     DEFAULT_TIMEOUT = 30
     DEFAULT_EXPIRY_SKEW = 60
+    DEFAULT_MAX_RETRIES = 2
+    DEFAULT_RETRY_INTERVAL = 0.5
 
     attr_reader :credentials, :region, :api_base_url, :identity_base_url,
                 :org_id, :user_id, :scope, :token_store, :adapter,
-                :open_timeout, :timeout, :token_expiry_skew
+                :open_timeout, :timeout, :token_expiry_skew, :max_retries, :retry_interval
 
     def initialize(client_id:, client_secret:, pat:,
                    region: :us, org_id: nil, user_id: nil,
                    scope: DEFAULT_SCOPE, token_store: nil, adapter: nil,
                    open_timeout: DEFAULT_OPEN_TIMEOUT, timeout: DEFAULT_TIMEOUT,
-                   token_expiry_skew: DEFAULT_EXPIRY_SKEW)
+                   token_expiry_skew: DEFAULT_EXPIRY_SKEW,
+                   max_retries: DEFAULT_MAX_RETRIES, retry_interval: DEFAULT_RETRY_INTERVAL)
       @credentials = Auth::Credentials.new(client_id:, client_secret:, pat:)
       @region = region.to_sym
       hosts = Region.resolve(@region)
@@ -36,13 +39,30 @@ module UltimateFilevineClient
       @open_timeout = open_timeout
       @timeout = timeout
       @token_expiry_skew = token_expiry_skew
+      @max_retries = max_retries
+      @retry_interval = retry_interval
       freeze
     end
 
-    # Stable per-tenant cache key. org/user may be nil before bootstrap, so fall
-    # back to the client id, which already uniquely identifies the tenant.
+    # Per-tenant token cache key. The minted token depends only on the
+    # credentials (org/user are per-request headers, not part of minting), so the
+    # key is stable across org/user bootstrap.
     def token_key
-      "filevine:token:#{region}:#{org_id || user_id || credentials.client_id}"
+      "filevine:token:#{region}:#{credentials.client_id}"
+    end
+
+    # Return a new frozen Configuration with the given overrides, reusing the
+    # same token store. Used to populate org_id/user_id after bootstrap without
+    # mutating this (frozen) instance.
+    def with(org_id: @org_id, user_id: @user_id, scope: @scope, token_store: @token_store,
+             adapter: @adapter, open_timeout: @open_timeout, timeout: @timeout,
+             token_expiry_skew: @token_expiry_skew, max_retries: @max_retries,
+             retry_interval: @retry_interval)
+      self.class.new(
+        client_id: credentials.client_id, client_secret: credentials.client_secret,
+        pat: credentials.pat, region:, org_id:, user_id:, scope:, token_store:,
+        adapter:, open_timeout:, timeout:, token_expiry_skew:, max_retries:, retry_interval:
+      )
     end
   end
 end

@@ -12,17 +12,35 @@ module UltimateFilevineClient
   #
   # Clients are safe to use concurrently across threads.
   class Client
-    attr_reader :config, :authenticator
+    # Endpoint that resolves the credential's user + accessible orgs. Needs only
+    # the bearer token, so it works before org_id/user_id are known.
+    USER_ORGS_PATH = "/fv-app/v2/utils/GetUserOrgsWithToken"
+
+    attr_reader :config, :authenticator, :connection
 
     def initialize(config:)
       @config = config
       @authenticator = Auth::Authenticator.new(config: config)
+      @connection = Connection.new(config: config, authenticator: @authenticator)
     end
 
     # A valid bearer token for this tenant, minted/refreshed as needed.
     # @return [String]
     def access_token
       @authenticator.access_token
+    end
+
+    # Low-level request helpers, delegated to the per-tenant connection.
+    Connection::HTTP_METHODS.each do |verb|
+      define_method(verb) do |path, **kwargs|
+        @connection.public_send(verb, path, **kwargs)
+      end
+    end
+
+    # Bootstrap: resolve this credential's user and accessible orgs.
+    # @return [Hash] parsed { "User" => ..., "Orgs" => [...] }
+    def user_orgs
+      post(USER_ORGS_PATH).body
     end
   end
 end

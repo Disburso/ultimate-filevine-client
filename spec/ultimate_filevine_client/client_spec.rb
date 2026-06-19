@@ -26,4 +26,20 @@ RSpec.describe UltimateFilevineClient::Client do
     )
     expect(client.authenticator).not_to be(other.authenticator)
   end
+
+  it "exposes a per-tenant connection" do
+    expect(client.connection).to be_a(UltimateFilevineClient::Connection)
+  end
+
+  it "#user_orgs POSTs GetUserOrgsWithToken and returns the parsed payload" do
+    stub_request(:post, "https://identity.filevine.com/connect/token")
+      .to_return(status: 200, headers: { "Content-Type" => "application/json" },
+                 body: { access_token: "tok", expires_in: 3600 }.to_json)
+    stub = stub_request(:post, "https://api.filevineapp.com/fv-app/v2/utils/GetUserOrgsWithToken")
+           .to_return(status: 200, headers: { "Content-Type" => "application/json" },
+                      body: { User: { UserId: 1 }, Orgs: [{ OrgId: 5 }] }.to_json)
+    payload = client.user_orgs
+    expect(payload["Orgs"].first["OrgId"]).to eq(5)
+    expect(stub).to have_been_made.once
+  end
 end

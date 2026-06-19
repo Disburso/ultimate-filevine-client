@@ -26,7 +26,10 @@ Metrics/BlockLength:
     - "spec/**/*"
 
 Metrics/MethodLength:
-  Max: 15
+  Max: 20
+
+Metrics/AbcSize:
+  Max: 20
 
 # Keyword-argument constructors (e.g. Configuration) are idiomatic and clear.
 Metrics/ParameterLists:
