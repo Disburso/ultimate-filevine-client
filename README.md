@@ -111,9 +111,9 @@ Each resource hangs off the client and returns entity objects (raw payload alway
 | `client.projects` | `list`, `get`, `create`, `update`, `archive`, `remove_tag`, `add_hashtag`, `bulk_update_clients`, `conflict_check` | `/fv-app/v2/Projects` |
 | `client.contacts` | `list`, `get`, `create`, `update`; sub-lists `addresses`, `emails`, `phones`, `projects`; `countries`, `primary_languages`, `remove_tag` | `/fv-app/v2/Contacts` |
 | `client.documents` | `list`, `get`, `update`, `delete`; `search`, `recent`, `series`, `series_meta`; `copy`, `move`, `remove_tag`; `upload`, `download`; `create_upload_url`, `download_locator`, `batch_upload`, `confirm_upload`, `batch_download`, `add_revision`, `lock`, `unlock` | `/fv-app/v2/Documents` |
-| `client.notes` | `list`, `get`, `create`, `update`, `move`, `remove_tag` | `/fv-app/v2/Notes` |
+| `client.notes` | `list`, `get`, `create`, `update`, `move`, `remove_tag`, `pin`, `unpin` | `/fv-app/v2/Notes` |
 | `client.tasks` | `list`, `get`, `create`, `update`, `assign`, `unassign`, `complete`, `uncomplete`, `snooze`, `pin`, `unpin` | `/fv-app/v2/tasks` |
-| `client.project_types` | `list`, `get`, `sections` | `/fv-app/v2/ProjectTypes` |
+| `client.project_types` | `list`, `get`, `sections`, `phases` | `/fv-app/v2/ProjectTypes` |
 | `client.folders` | `list`, `get`, `create`, `update`, `delete`, `children`, `structure` | `/fv-app/v2/Folders` |
 | `client.users` | `list`, `me`, `get`, `delete`, `tasks`, `appointments`, `projects_access`, `recent_projects` | `/fv-app/v2/Users` |
 | `client.appointments` | `get`, `update`, `delete` | `/fv-app/v2/Appointments/{id}` |
@@ -124,6 +124,8 @@ Each resource hangs off the client and returns entity objects (raw payload alway
 | `client.teams` | `list`, `get`, `create`, `add_members`, `remove_members`, `assign_member_roles`, `projects_access`, `add_project`, `remove_project`, `assign_to_projects` | `/fv-app/v2/teams` |
 | `client.contact_types` | `list`, `create` | `/fv-app/v2/ContactTypes` |
 | `client.deadline_chain_types` | `list` | `/fv-app/v2/chaintypes` |
+| `client.images` | `get` (JSON envelope, or raw bytes with `as_json: false`) | `/fv-app/v2/images/{id}` |
+| `client.vitals` | `get(project_id)` | `/fv-app/vitals` (org-level; distinct from `project(id).vitals`) |
 
 ```ruby
 project = client.projects.get(88_123_456)
@@ -224,7 +226,7 @@ scope.conflict_check("Smith")             # run a conflict check on this project
 | `.deadline_chains` | `list`, `get`, `create`, `update`, `delete`, `update_chain_date` | create path is capitalized `/Projects/.../DeadlineChains` |
 | `.tasks` | `list`, `pin`, `unpin` | project task feed |
 | `.notes` | `list`, `pin`, `unpin` | project note feed |
-| `.team` | `list`, `add`, `get`, `update`, `remove`, `assign_roles`, `teams`, `org_roles` | |
+| `.team` | `list`, `add`, `get`, `update`, `remove`, `assign_roles`, `teams`, `org_roles`, `org_role_positions` | |
 | `.appointments` | `list`, `create`, `get`, `update`, `delete` | get/update/delete use the flat `/Appointments/{id}` path |
 | `.emails` | `list`, `add`, `add_encoded` | emails are notes; `From` is required |
 | `.documents` | `list`, `add` | `list` is the spec's deprecated per-project listing |

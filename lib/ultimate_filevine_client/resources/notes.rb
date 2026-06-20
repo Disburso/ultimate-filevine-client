@@ -25,6 +25,12 @@ module UltimateFilevineClient
       def remove_tag(tag_name, note_ids:)
         bulk_request(:delete, "#{PATH}/tags/#{tag_name}", body: { NoteIds: note_ids })
       end
+
+      # Pin / unpin a note to the current user's note feed (body-less POST;
+      # returns the updated note). The project-feed variants live on
+      # `client.project(id).notes.pin` / `.unpin`.
+      def pin(note_id) = post_entity("#{PATH}/#{note_id}/pin", Entities::Note)
+      def unpin(note_id) = post_entity("#{PATH}/#{note_id}/unpin", Entities::Note)
     end
   end
 end

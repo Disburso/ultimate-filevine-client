@@ -16,6 +16,13 @@ module UltimateFilevineClient
       def sections(project_type_id, limit: Pagination::DEFAULT_LIMIT, **params)
         paginate("#{PATH}/#{project_type_id}/sections", params: params, limit: limit)
       end
+
+      # Auto-paging list of the project type's phases ({Entities::Phase}). Pass
+      # an optional `name:` to filter by phase name. (Custom #sections stay raw
+      # because they are heterogeneous; a Phase has a fixed id/name/permanent shape.)
+      def phases(project_type_id, limit: Pagination::DEFAULT_LIMIT, **params)
+        list_entities("#{PATH}/#{project_type_id}/phases", Entities::Phase, limit:, **params)
+      end
     end
   end
 end

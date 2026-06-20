@@ -107,6 +107,14 @@ RSpec.describe UltimateFilevineClient::ProjectScope do
         .to_return(ok([{ "Name" => "Litigation" }]))
       expect(scope.team.teams).to eq([{ "Name" => "Litigation" }])
     end
+
+    it "returns org roles with members and positions (unpaginated ItemList -> Items)" do
+      stub_request(:get, "#{base}/fv-app/v2/projects/7/teamorgrolepositions")
+        .to_return(ok({ Items: [{ "OrgRoleId" => { "Native" => 1 }, "Members" => [{ "UserId" => { "Native" => 4 } }] }],
+                        Count: 1 }))
+      positions = scope.team.org_role_positions
+      expect(positions).to eq([{ "OrgRoleId" => { "Native" => 1 }, "Members" => [{ "UserId" => { "Native" => 4 } }] }])
+    end
   end
 
   describe "appointments (casing trap: scoped list/create, flat get/delete)" do

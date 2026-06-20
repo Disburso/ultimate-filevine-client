@@ -7,6 +7,17 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 ## [Unreleased]
 
 ### Added
+- Additional read/feed endpoints closing intra-family surface gaps:
+  - `client.project_types.phases(project_type_id)` — auto-paging list of
+    `Entities::Phase` (`GET /fv-app/v2/ProjectTypes/{id}/phases`, optional `name:` filter).
+  - `client.notes.pin` / `#unpin` — pin/unpin a note to the user feed, complementing
+    the existing project-feed `client.project(id).notes.pin`/`#unpin`.
+  - `client.project(id).team.org_role_positions` — org roles with members and
+    positions (`GET /fv-app/v2/projects/{id}/teamorgrolepositions`, unpaginated).
+  - `client.vitals.get(project_id)` — the standalone, org-level vitals endpoint
+    (`GET /fv-app/vitals`), distinct from the project-scoped `project(id).vitals`.
+  - `client.images.get(image_id, as_json:)` — fetch a stored image
+    (`GET /fv-app/v2/images/{id}`); raw bytes when `as_json: false`, JSON envelope otherwise.
 - Initial gem scaffold: gemspec, Bundler `Gemfile`, `Rakefile` (`spec` + `rubocop`),
   RSpec with WebMock/VCR, RuboCop config, `bin/console` + `bin/setup`, `.env.example`.
 - Committed Filevine v2 OpenAPI specs (`docs/openapi/`) and an extracted API-surface

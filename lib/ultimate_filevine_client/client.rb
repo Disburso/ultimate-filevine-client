@@ -34,7 +34,9 @@ module UltimateFilevineClient
       custom_contacts: Resources::CustomContacts,
       teams: Resources::Teams,
       contact_types: Resources::ContactTypes,
-      deadline_chain_types: Resources::DeadlineChainTypes
+      deadline_chain_types: Resources::DeadlineChainTypes,
+      images: Resources::Images,
+      vitals: Resources::Vitals
     }.freeze
 
     attr_reader :config, :authenticator, :connection, :billing

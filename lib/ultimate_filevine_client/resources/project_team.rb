@@ -30,6 +30,15 @@ module UltimateFilevineClient
         paginate("/fv-app/v2/projects/#{project_id}/teamorgroles", params: params, limit: limit)
       end
 
+      # Org roles on the project with their members and positions. Unlike
+      # #org_roles this endpoint takes no offset/limit, so it is fetched in one
+      # shot and returns the bare list of role-with-members hashes (the Items
+      # of the ItemList envelope).
+      def org_role_positions
+        body = connection.get("/fv-app/v2/projects/#{project_id}/teamorgrolepositions").body
+        body.is_a?(Hash) ? Array(body["Items"]) : Array(body)
+      end
+
       private
 
       def base_path = "/fv-app/v2/projects/#{project_id}/team"
