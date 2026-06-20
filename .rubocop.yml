@@ -35,6 +35,7 @@ Metrics/AbcSize:
 Naming/PredicateMethod:
   AllowedMethods:
     - perform_action
+    - put
     - toggle_section_visibility
 
 # Keyword-argument constructors (e.g. Configuration) are idiomatic and clear.

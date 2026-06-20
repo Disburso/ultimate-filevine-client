@@ -108,7 +108,7 @@ Each resource hangs off the client and returns entity objects (raw payload alway
 |----------|---------|------|
 | `client.projects` | `list`, `get`, `create`, `update` | `/fv-app/v2/Projects` |
 | `client.contacts` | `list`, `get`, `create`, `update`; sub-lists `addresses`, `emails`, `phones`, `projects`; `countries`, `primary_languages`, `remove_tag` | `/fv-app/v2/Contacts` |
-| `client.documents` | `list`, `get`, `update`, `delete` | `/fv-app/v2/Documents` |
+| `client.documents` | `list`, `get`, `update`, `delete`; `upload`, `download`; `create_upload_url`, `download_locator`, `batch_upload`, `confirm_upload`, `batch_download`, `add_revision`, `lock`, `unlock` | `/fv-app/v2/Documents` |
 | `client.notes` | `list`, `get`, `create`, `update` | `/fv-app/v2/Notes` |
 | `client.tasks` | `list`, `get` | `/fv-app/v2/tasks` |
 | `client.project_types` | `list`, `get`, `sections` | `/fv-app/v2/ProjectTypes` |
@@ -203,6 +203,24 @@ scope.vitals                              # raw vitals array
 
 Filevine's paths are case-sensitive and inconsistently cased; each sub-resource uses the exact casing from the spec (so some hit `/Projects` and others `/projects` — that's intentional, not a typo).
 
+### Uploading & downloading documents
+
+Document bytes move through short-lived **presigned S3 URLs**: the gateway hands back a URL, and the file is transferred directly to/from S3 over a separate connection (no Filevine auth headers). The high-level helpers wrap the multi-step flow:
+
+```ruby
+# Upload: requests a URL, PUTs the bytes to S3, then commits to the project
+# (without that commit the document stays pending and won't appear in listings).
+locator = client.documents.upload(File.binread("complaint.pdf"),
+                                  filename: "complaint.pdf", project_id: 88_123_456)
+locator["DocumentId"]["Native"]   # the new document id
+
+# Download: resolves the locator, then GETs the raw bytes
+bytes = client.documents.download(document_id)
+File.binwrite("out.pdf", bytes)
+```
+
+`upload` accepts a String of bytes or any object responding to `#read` (pass binary data). The lower-level steps are exposed too — `create_upload_url`, `download_locator`, `batch_upload` + `confirm_upload`, `batch_download`, `add_revision`, `lock` / `unlock` — for callers that need to drive the flow themselves. A failed S3 transfer raises `UltimateFilevineClient::TransferError` (the presigned signature is stripped from the message).
+
 ## Pagination
 
 `#list` returns a lazy, auto-paging collection (offset/limit under the hood). Pages are fetched only as you consume them:
@@ -228,6 +246,7 @@ Error
 ├── ConfigurationError
 ├── AuthenticationError
 ├── TimeoutError
+├── TransferError          (presigned S3 transfer failed; status, url, response_body)
 └── RequestError            (status, response_headers, response_body)
     ├── ClientError         (4xx)
     │   ├── BadRequest (400)  Unauthorized (401)  Forbidden (403)

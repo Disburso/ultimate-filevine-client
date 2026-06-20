@@ -111,6 +111,15 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
     `projects_access`. New `Entities::Team`.
   - Added a `Resources::Base#perform_action` helper for 204/no-content writes;
     `delete_path`, `delete_batch`, and `remove_tag` now route through it.
+- Document upload/download via the presigned-URL (S3) flow:
+  - `client.documents.upload(io, filename:, project_id:, ...)` requests an upload
+    URL, PUTs the bytes to S3, and commits via Add Document to Project;
+    `client.documents.download(id)` resolves the locator and GETs the bytes.
+  - Lower-level steps: `create_upload_url`, `download_locator`, `batch_upload`,
+    `confirm_upload`, `batch_download`, `add_revision`, `lock`, `unlock`.
+  - New `Transfer` helper performs raw byte transfers to absolute presigned URLs
+    over a separate connection (no gateway base URL, no auth headers, no JSON
+    middleware). New `TransferError` (strips the URL signature from its message).
 
 ### Changed
 - Raised the Ruby floor to `>= 3.2` to use `Data.define` for value objects.

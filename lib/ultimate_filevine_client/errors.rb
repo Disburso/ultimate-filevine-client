@@ -10,6 +10,20 @@ module UltimateFilevineClient
   # Raised when a request times out or the connection fails (after retries).
   class TimeoutError < Error; end
 
+  # Raised when a direct byte transfer to/from a presigned (S3) URL fails. The
+  # URL's query string (which carries the signature) is stripped from the
+  # message and #url so credentials don't leak into logs.
+  class TransferError < Error
+    attr_reader :status, :url, :response_body
+
+    def initialize(status:, url:, body: nil)
+      @status = status
+      @url = url.to_s.split("?").first
+      @response_body = body
+      super("Document transfer failed (HTTP #{status}) for #{@url}")
+    end
+  end
+
   # Base for errors mapped from a non-2xx HTTP response. Carries the status and
   # the raw response so callers can inspect details (Filevine publishes no formal
   # error-body schema, so the body shape is preserved as-is).
