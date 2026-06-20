@@ -50,8 +50,17 @@ module UltimateFilevineClient
         entity.new(connection.put(path, body: attributes).body)
       end
 
-      def update_entity(path, entity, attributes)
-        entity.new(connection.patch(path, body: attributes).body)
+      # PATCH, wrapping the response in `entity`. `attributes` may be nil for
+      # body-less updates (e.g. assigning a task via the URL only).
+      def update_entity(path, entity, attributes = nil, params: nil)
+        entity.new(connection.patch(path, **request_kwargs(attributes, params)).body)
+      end
+
+      # DELETE that returns a record rather than no content (some Filevine
+      # "deletes" return the updated resource, e.g. unassigning a task returns
+      # the now-unassigned task), wrapped in `entity`.
+      def delete_entity(path, entity)
+        entity.new(connection.delete(path).body)
       end
 
       # Perform a write whose response body is not needed; returns true (a

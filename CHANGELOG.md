@@ -111,6 +111,18 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
     `projects_access`. New `Entities::Team`.
   - Added a `Resources::Base#perform_action` helper for 204/no-content writes;
     `delete_path`, `delete_batch`, and `remove_tag` now route through it.
+- Full Task CRUD + lifecycle on `client.tasks` (previously read-only):
+  - `create`, `update` (body only), and `unassign` — the spec's `DELETE` on a
+    task, which returns the now-unassigned task rather than no content.
+  - `assign(task_id, assignee_id)` (a body-less `PATCH`), `complete` (with an
+    optional time-entry body) / `uncomplete`, `snooze(task_id, date)` (a `PUT`
+    carrying the single PascalCase `SnoozeDate` field), and feed `pin` / `unpin`.
+  - `Entities::Task` gained `project_id`, `assignee_id`, `target_date`,
+    `pinned_to_feed?`, and `pinned_to_project?` to surface the lifecycle fields.
+  - `Resources::Base` gained `delete_entity` (a `DELETE` that returns a record),
+    and `update_entity` now allows a body-less `PATCH` (for `assign`). Paths are
+    taken verbatim from the spec, preserving its inconsistent casing (capital
+    `{taskID}` on complete/uncomplete, `{assigneeID}` on assign).
 - Document upload/download via the presigned-URL (S3) flow:
   - `client.documents.upload(io, filename:, project_id:, ...)` requests an upload
     URL, PUTs the bytes to S3, and commits via Add Document to Project;

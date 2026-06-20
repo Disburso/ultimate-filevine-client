@@ -110,7 +110,7 @@ Each resource hangs off the client and returns entity objects (raw payload alway
 | `client.contacts` | `list`, `get`, `create`, `update`; sub-lists `addresses`, `emails`, `phones`, `projects`; `countries`, `primary_languages`, `remove_tag` | `/fv-app/v2/Contacts` |
 | `client.documents` | `list`, `get`, `update`, `delete`; `upload`, `download`; `create_upload_url`, `download_locator`, `batch_upload`, `confirm_upload`, `batch_download`, `add_revision`, `lock`, `unlock` | `/fv-app/v2/Documents` |
 | `client.notes` | `list`, `get`, `create`, `update` | `/fv-app/v2/Notes` |
-| `client.tasks` | `list`, `get` | `/fv-app/v2/tasks` |
+| `client.tasks` | `list`, `get`, `create`, `update`, `assign`, `unassign`, `complete`, `uncomplete`, `snooze`, `pin`, `unpin` | `/fv-app/v2/tasks` |
 | `client.project_types` | `list`, `get`, `sections` | `/fv-app/v2/ProjectTypes` |
 | `client.folders` | `list`, `get`, `create`, `update`, `delete`, `children`, `structure` | `/fv-app/v2/Folders` |
 | `client.users` | `list`, `me`, `get`, `delete`, `tasks`, `appointments`, `projects_access`, `recent_projects` | `/fv-app/v2/Users` |
@@ -133,6 +133,15 @@ client.contacts.projects(contact_id).first                       # ProjectContac
 client.notes.update(42, Body: "Updated note body")
 client.documents.delete(7) # => true (raises on failure)
 client.project_types.sections(4).each { |section| ... }
+
+# Tasks have a full lifecycle (Filevine models a task as a note, so each call
+# returns the updated task record):
+task = client.tasks.create(Body: "Draft answer", ProjectId: { Native: 88_123_456 }, AssigneeId: { Native: 7 })
+client.tasks.assign(task.id, 9)                        # reassign to another user
+client.tasks.snooze(task.id, "2026-07-01T00:00:00Z")  # change the due date
+client.tasks.complete(task.id, Hours: 0.5)            # optional time entry; omit to complete without one
+client.tasks.unassign(task.id)                         # the spec's DELETE — returns the now-unassigned task
+client.tasks.pin(task.id)                              # pin to the user's feed
 
 client.folders.children(folder_id).each { |f| ... }   # page a folder's contents
 client.folders.structure(project_id)                  # whole tree for a project
