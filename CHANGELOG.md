@@ -111,6 +111,17 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
     `projects_access`. New `Entities::Team`.
   - Added a `Resources::Base#perform_action` helper for 204/no-content writes;
     `delete_path`, `delete_batch`, and `remove_tag` now route through it.
+- Notes extras and two reference-data type resources:
+  - `client.notes.move` (move notes/activity items between projects in an org)
+    and `client.notes.remove_tag` (bulk tag removal) — both return `nil` on full
+    success (`204`) or the multi-status result hash on partial failure (`207`).
+  - `client.contact_types` (`list` / `create`) — new `Entities::ContactType`
+    (note: `ContactTypeId` is a bare int, not an Identifier).
+  - `client.deadline_chain_types` (`list`, filterable by `name:`) on the spec's
+    lowercase `/chaintypes` path — new `Entities::ChainType` (here `ChainTypeId`
+    *is* an Identifier object).
+  - Added a `Resources::Base#bulk_request` helper for the `204`/`207` bulk-write
+    contract; `projects.remove_tag` and `documents.remove_tag` now route through it.
 - Documents-family extras on `client.documents` beyond CRUD + byte transfer:
   - `search` (filename search within a project; `searchTerm` + `projectId`
     required) and `recent` (recently-opened) — both auto-paging `Document`s.

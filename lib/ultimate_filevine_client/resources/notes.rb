@@ -10,6 +10,21 @@ module UltimateFilevineClient
       def get(note_id) = fetch_entity("#{PATH}/#{note_id}", Entities::Note)
       def create(attributes) = create_entity(PATH, Entities::Note, attributes)
       def update(note_id, attributes) = update_entity("#{PATH}/#{note_id}", Entities::Note, attributes)
+
+      # Move notes (and other activity items) to another project in the same org.
+      # All ids are Identifier objects; `note_ids` accepts up to 100. Returns nil
+      # on full success (204) or the multi-status result hash on partial failure.
+      def move(note_ids:, source_project_id:, destination_project_id:)
+        body = { SourceProjectId: source_project_id, DestinationProjectId: destination_project_id,
+                 NoteIds: note_ids }
+        bulk_request(:post, "#{PATH}/move", body: body)
+      end
+
+      # Bulk-remove a tag from the given notes. `note_ids` are Identifier objects.
+      # Returns nil on full success (204) or the multi-status hash on a 207.
+      def remove_tag(tag_name, note_ids:)
+        bulk_request(:delete, "#{PATH}/tags/#{tag_name}", body: { NoteIds: note_ids })
+      end
     end
   end
 end

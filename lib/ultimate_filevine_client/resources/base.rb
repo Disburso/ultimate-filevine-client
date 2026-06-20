@@ -73,6 +73,15 @@ module UltimateFilevineClient
       # DELETE returning true; a non-2xx response raises a RequestError.
       def delete_path(path) = perform_action(:delete, path)
 
+      # A bulk write whose success is a 204 (no content) and whose partial
+      # failure is a 207 multi-status body. Returns nil on full success or the
+      # parsed multi-status hash (with per-item Results) on partial failure; a
+      # non-2xx response still raises.
+      def bulk_request(http_method, path, body:)
+        result = connection.public_send(http_method, path, body: body).body
+        result unless result.nil? || result == ""
+      end
+
       def request_kwargs(body, params)
         kwargs = {}
         kwargs[:body] = body unless body.nil?

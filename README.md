@@ -109,7 +109,7 @@ Each resource hangs off the client and returns entity objects (raw payload alway
 | `client.projects` | `list`, `get`, `create`, `update`, `archive`, `remove_tag`, `add_hashtag`, `bulk_update_clients`, `conflict_check` | `/fv-app/v2/Projects` |
 | `client.contacts` | `list`, `get`, `create`, `update`; sub-lists `addresses`, `emails`, `phones`, `projects`; `countries`, `primary_languages`, `remove_tag` | `/fv-app/v2/Contacts` |
 | `client.documents` | `list`, `get`, `update`, `delete`; `search`, `recent`, `series`, `series_meta`; `copy`, `move`, `remove_tag`; `upload`, `download`; `create_upload_url`, `download_locator`, `batch_upload`, `confirm_upload`, `batch_download`, `add_revision`, `lock`, `unlock` | `/fv-app/v2/Documents` |
-| `client.notes` | `list`, `get`, `create`, `update` | `/fv-app/v2/Notes` |
+| `client.notes` | `list`, `get`, `create`, `update`, `move`, `remove_tag` | `/fv-app/v2/Notes` |
 | `client.tasks` | `list`, `get`, `create`, `update`, `assign`, `unassign`, `complete`, `uncomplete`, `snooze`, `pin`, `unpin` | `/fv-app/v2/tasks` |
 | `client.project_types` | `list`, `get`, `sections` | `/fv-app/v2/ProjectTypes` |
 | `client.folders` | `list`, `get`, `create`, `update`, `delete`, `children`, `structure` | `/fv-app/v2/Folders` |
@@ -120,6 +120,8 @@ Each resource hangs off the client and returns entity objects (raw payload alway
 | `client.reports` | `list`, `run` | `/fv-app/v2/Reports` |
 | `client.custom_contacts` | `meta`, `create`, `update`, `tab` | `/fv-app/v2/Custom-Contacts` |
 | `client.teams` | `list`, `get`, `create`, `add_members`, `remove_members`, `assign_member_roles`, `projects_access`, `add_project`, `remove_project`, `assign_to_projects` | `/fv-app/v2/teams` |
+| `client.contact_types` | `list`, `create` | `/fv-app/v2/ContactTypes` |
+| `client.deadline_chain_types` | `list` | `/fv-app/v2/chaintypes` |
 
 ```ruby
 project = client.projects.get(88_123_456)
@@ -165,6 +167,15 @@ client.teams.add_members(team_id, UserIDs: [5], AccessLevel: 1)
 client.teams.add_project(team_id, project_id, apply_subscriptions: true)
 # Custom contacts use a delta/field-bag write model:
 client.custom_contacts.create(contact_id, [{ Action: "Add", Selector: "nickname", Value: "JJ" }])
+
+# Move notes between projects / bulk-remove a tag (nil on full success, hash on a 207):
+client.notes.move(note_ids: [{ Native: 5 }], source_project_id: { Native: 1 }, destination_project_id: { Native: 2 })
+client.notes.remove_tag("urgent", note_ids: [{ Native: 5 }])
+
+# Reference-data type lists:
+client.contact_types.list.each { |t| puts "#{t.id} #{t.name}" }   # bare-int ids
+client.contact_types.create("Expert Witness")
+client.deadline_chain_types.list(name: "Discovery").first         # Identifier ids; lowercase /chaintypes
 ```
 
 ### Project-scoped sub-resources

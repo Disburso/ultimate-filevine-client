@@ -125,8 +125,7 @@ module UltimateFilevineClient
       # objects. Returns nil on full success (204) or the multi-status result hash
       # when some documents fail (207).
       def remove_tag(tag_name, document_ids:)
-        body = connection.delete("#{PATH}/tags/#{tag_name}", body: { DocumentIds: document_ids }).body
-        body unless body.nil? || body == ""
+        bulk_request(:delete, "#{PATH}/tags/#{tag_name}", body: { DocumentIds: document_ids })
       end
 
       private

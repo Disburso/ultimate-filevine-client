@@ -25,8 +25,7 @@ module UltimateFilevineClient
       # objects (e.g. { Native: 5 }). Returns nil on full success (204) or a
       # multi-status result hash when some projects fail (207).
       def remove_tag(tag_name, project_ids:)
-        body = connection.delete("#{PATH}/tags/#{tag_name}", body: { ProjectIds: project_ids }).body
-        body unless body.nil? || body == ""
+        bulk_request(:delete, "#{PATH}/tags/#{tag_name}", body: { ProjectIds: project_ids })
       end
 
       # Apply a hashtag to a set of entities (projects/docs/notes/comments — each
