@@ -37,6 +37,7 @@ Naming/PredicateMethod:
     - delete
     - delete_path
     - delete_batch
+    - remove_tag
     - toggle_section_visibility
 
 # Keyword-argument constructors (e.g. Configuration) are idiomatic and clear.

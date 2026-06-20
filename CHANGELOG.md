@@ -95,6 +95,13 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
     nests records under a custom key and advances via an opaque cursor (Share
     Links: records under `ShareLinks`, `NewLastKey` -> `lastKey`), exposed via a
     `Resources::Base#cursor_paginate` helper.
+- Contact sub-lists and reference data on `client.contacts`:
+  - Auto-paging `addresses`, `emails` (lowercase `emailaddresses` path),
+    `phones`, and `projects` (ProjectContact memberships); new `Entities::Address`,
+    `Entities::Email`, `Entities::Phone` (projects reuse `Entities::ProjectContact`).
+  - `countries` (code => name map) and `primary_languages` (string array) raw
+    reference lists, and `remove_tag(tag_name, person_ids:)` (a DELETE with a
+    body) for bulk tag removal.
 
 ### Changed
 - Raised the Ruby floor to `>= 3.2` to use `Data.define` for value objects.

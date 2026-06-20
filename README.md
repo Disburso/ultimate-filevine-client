@@ -107,7 +107,7 @@ Each resource hangs off the client and returns entity objects (raw payload alway
 | Accessor | Methods | Path |
 |----------|---------|------|
 | `client.projects` | `list`, `get`, `create`, `update` | `/fv-app/v2/Projects` |
-| `client.contacts` | `list`, `get`, `create`, `update` | `/fv-app/v2/Contacts` |
+| `client.contacts` | `list`, `get`, `create`, `update`; sub-lists `addresses`, `emails`, `phones`, `projects`; `countries`, `primary_languages`, `remove_tag` | `/fv-app/v2/Contacts` |
 | `client.documents` | `list`, `get`, `update`, `delete` | `/fv-app/v2/Documents` |
 | `client.notes` | `list`, `get`, `create`, `update` | `/fv-app/v2/Notes` |
 | `client.tasks` | `list`, `get` | `/fv-app/v2/tasks` |
@@ -126,6 +126,8 @@ project.client_name       # => "Jane Smith"
 project["ProjectTypeCode"] # raw field access
 
 client.contacts.create(FirstName: "Jane", LastName: "Smith")
+client.contacts.phones(contact_id).each { |p| puts p.number }   # per-contact sub-list
+client.contacts.projects(contact_id).first                       # ProjectContact memberships
 client.notes.update(42, Body: "Updated note body")
 client.documents.delete(7) # => true (raises on failure)
 client.project_types.sections(4).each { |section| ... }
