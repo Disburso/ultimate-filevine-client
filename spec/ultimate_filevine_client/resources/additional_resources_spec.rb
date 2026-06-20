@@ -76,6 +76,17 @@ RSpec.describe "Additional resources" do # rubocop:disable RSpec/DescribeClass
       stub_request(:post, "#{base}/fv-app/v2/Notes").to_return(ok({ "NoteId" => { "Native" => 2 }, "Body" => "hi" }))
       expect(client.notes.create(Body: "hi").body).to eq("hi")
     end
+
+    it "pins and unpins a note to the user feed (body-less POST, returns the Note)" do
+      pin = stub_request(:post, "#{base}/fv-app/v2/Notes/1/pin")
+            .to_return(ok({ "NoteId" => { "Native" => 1 }, "IsPinned" => true }))
+      unpin = stub_request(:post, "#{base}/fv-app/v2/Notes/1/unpin")
+              .to_return(ok({ "NoteId" => { "Native" => 1 }, "IsPinned" => false }))
+      expect(client.notes.pin(1).id).to eq(1)
+      expect(client.notes.unpin(1).id).to eq(1)
+      expect(pin).to have_been_made.once
+      expect(unpin).to have_been_made.once
+    end
   end
 
   describe "tasks (lowercase path)" do
@@ -102,6 +113,16 @@ RSpec.describe "Additional resources" do # rubocop:disable RSpec/DescribeClass
         .with(query: { "limit" => "50", "offset" => "0" })
         .to_return(ok({ Items: [{ "Name" => "Intake" }], HasMore: false }))
       expect(client.project_types.sections(4).to_a).to eq([{ "Name" => "Intake" }])
+    end
+
+    it "auto-pages a project type's phases as Phase entities, forwarding a name filter" do
+      stub_request(:get, "#{base}/fv-app/v2/ProjectTypes/4/phases")
+        .with(query: { "limit" => "50", "offset" => "0", "name" => "Discovery" })
+        .to_return(ok({ Items: [{ "PhaseId" => { "Native" => 9 }, "Name" => "Discovery", "IsPermanent" => true }],
+                        HasMore: false }))
+      phase = client.project_types.phases(4, name: "Discovery").first
+      expect(phase).to be_a(UltimateFilevineClient::Entities::Phase)
+      expect([phase.id, phase.name, phase.permanent?]).to eq([9, "Discovery", true])
     end
   end
 end
