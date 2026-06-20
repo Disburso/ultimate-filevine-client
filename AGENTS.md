@@ -38,6 +38,7 @@
 - Write `describe` blocks per class/method and `context` blocks per scenario.
 - Stub external HTTP calls (e.g., with WebMock or VCR); never hit the live Filevine API in tests.
 - Run `bundle exec rspec` before pushing; keep new code covered.
+- The recording pass (`spec/recording/`, run via `rake record:sandbox` with real creds) is the only opt-in path that hits the live API; it records VCR cassettes for offline replay. Point it only at a synthetic-data sandbox org — response bodies are committed (auth/token/tenant ids are scrubbed in `spec/support/vcr.rb`, body PII is not). The default suite stays offline and these examples skip until their cassette exists.
 
 ## Commit & Pull Request Guidelines
 - Write imperative, present-tense commit subjects (e.g., "Add session auth helper"); keep them under ~72 characters.

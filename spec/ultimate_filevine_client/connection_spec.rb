@@ -31,6 +31,15 @@ RSpec.describe UltimateFilevineClient::Connection do
       expect(stub).to have_been_made.once
     end
 
+    it "stringifies integer org/user ids (as the bootstrap payload returns them)" do
+      connection = build(org_id: 777, user_id: 555)
+      stub = stub_request(:get, "#{base}/fv-app/v2/Projects")
+             .with(headers: { "x-fv-orgid" => "777", "x-fv-userid" => "555" })
+             .to_return(json({ Items: [] }))
+      expect { connection.get("/fv-app/v2/Projects") }.not_to raise_error
+      expect(stub).to have_been_made.once
+    end
+
     it "omits org/user headers before they are resolved" do
       connection = build(org_id: nil, user_id: nil)
       stub_request(:post, "#{base}#{UltimateFilevineClient::Client::USER_ORGS_PATH}").to_return(json({ Orgs: [] }))

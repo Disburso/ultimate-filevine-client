@@ -322,6 +322,27 @@ bin/console          # IRB with the gem loaded
 
 Tests stub all HTTP via WebMock/VCR and never reach the live Filevine API. The committed OpenAPI specs under `docs/openapi/` are the source of truth; regenerate the API-surface reference with `python3 scripts/extract_api_surface.py`.
 
+### Recording against a sandbox org
+
+Most specs assert against hand-authored fixtures, which verify the client matches Filevine's *documented* shapes. The recording pass (`spec/recording/`) closes the gap to *actual runtime* behavior: it drives a real **sandbox** org and records the interactions into VCR cassettes that CI then replays offline.
+
+```sh
+# 1. Put real sandbox creds in .env (FILEVINE_CLIENT_ID/SECRET/PAT, optionally
+#    FILEVINE_ORG_ID/USER_ID to pin a specific org/user).
+# 2. Record. FILEVINE_RECORD=1 records missing cassettes; =all re-records all.
+FILEVINE_RECORD=1 bundle exec rake record:sandbox
+# 3. Review the committed cassettes, then commit them. CI replays them offline.
+bundle exec rspec --tag sandbox
+```
+
+What it records: a read-only pass (token mint → `user_orgs` bootstrap → `users.me`, `projects`, `project_types`) and a write lifecycle (create a contact + project, rename it, add a note and a task, complete/uncomplete the task, then **archive the project** to clean up). The synthetic client contact is left behind — the v2 API exposes no contact delete.
+
+Safety:
+
+- **Point it only at a sandbox org holding synthetic data.** Response bodies are committed verbatim. Credentials, bearer tokens, and the `x-fv-orgid`/`x-fv-userid` tenant ids are scrubbed automatically (`spec/support/vcr.rb`), but arbitrary body PII is **not** — that is what the synthetic-data requirement guards against.
+- The default suite stays offline: without `FILEVINE_RECORD`, cassettes replay under dummy credentials (`record: :none`), and each recording example **skips** until its cassette exists, so `bundle exec rspec` is green before the first recording.
+- Always review a freshly recorded cassette before committing it.
+
 ## License
 
 Released under the [MIT License](LICENSE.txt).

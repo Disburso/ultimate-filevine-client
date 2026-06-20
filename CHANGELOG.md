@@ -165,6 +165,22 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   - New `Transfer` helper performs raw byte transfers to absolute presigned URLs
     over a separate connection (no gateway base URL, no auth headers, no JSON
     middleware). New `TransferError` (strips the URL signature from its message).
+- Sandbox recording pass (`spec/recording/`) — an opt-in path that records real
+  Filevine interactions for offline CI replay, bridging the gap from the
+  documented shapes (hand-authored fixtures) to actual runtime behavior:
+  - `SandboxRecording` helper (`spec/support/sandbox.rb`) with a record/replay
+    toggle (`FILEVINE_RECORD` unset = offline replay under dummy creds; `=1`
+    records missing cassettes; `=all` re-records) and a `rake record:sandbox` task.
+  - `sandbox_recording_spec.rb` (tagged `:sandbox`) records a read-only pass
+    (mint → `user_orgs` → `users.me` / `projects` / `project_types`) and a write
+    lifecycle (create contact + project, rename, add note + task, complete/
+    uncomplete, then archive the project). Each example skips until its cassette
+    exists, so the default suite stays green and offline.
+  - Hardened VCR scrubbing (`spec/support/vcr.rb`): masks client id/secret/PAT,
+    the bearer token (both the Authorization header and the `/connect/token`
+    response body), and the `x-fv-orgid`/`x-fv-userid` tenant ids; blanks the
+    token-exchange request body and drops cookies. Requests match on
+    method+path+query so committed cassettes replay under dummy credentials.
 
 ### Changed
 - Raised the Ruby floor to `>= 3.2` to use `Data.define` for value objects.

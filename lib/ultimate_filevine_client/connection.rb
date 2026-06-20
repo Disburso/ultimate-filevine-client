@@ -66,8 +66,11 @@ module UltimateFilevineClient
     def request_headers(extra)
       {
         "Authorization" => "Bearer #{@authenticator.access_token}",
-        "x-fv-orgid" => @config.org_id,
-        "x-fv-userid" => @config.user_id
+        # Coerce to String: the bootstrap payload often carries org/user ids as
+        # JSON integers, and Faraday calls #strip on header values. `&.to_s` keeps
+        # a nil (still-unresolved) id nil, so `compact` drops it.
+        "x-fv-orgid" => @config.org_id&.to_s,
+        "x-fv-userid" => @config.user_id&.to_s
       }.compact.merge(extra)
     end
 
