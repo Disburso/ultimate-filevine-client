@@ -4,7 +4,7 @@ A thread-safe, multitenant-friendly Ruby client for the [Filevine v2 API](https:
 
 Built for applications that talk to Filevine on behalf of **many tenants concurrently**: each tenant gets its own client instance with its own credentials and isolated token cache. There is intentionally **no global configuration**.
 
-> **Status: in active development.** Auth, the gateway connection, pagination, and the Projects / Contacts / Documents / Notes / Tasks / Project Types resources are implemented and tested. More resources and a Redis-backed token store are planned. See `docs/openapi/API_SURFACE.md` for the full API surface.
+> **Status: in active development.** Auth, the gateway connection, pagination, the org-level resources (Projects / Contacts / Documents / Notes / Tasks / Project Types), and the project-scoped sub-resources (`client.project(id).…`) are implemented and tested. More resources and a Redis-backed token store are planned. See `docs/openapi/API_SURFACE.md` for the full API surface.
 
 ## Installation
 
@@ -124,6 +124,57 @@ client.notes.update(42, Body: "Updated note body")
 client.documents.delete(7) # => true (raises on failure)
 client.project_types.sections(4).each { |section| ... }
 ```
+
+### Project-scoped sub-resources
+
+`client.project(id)` returns a lightweight, immutable scope exposing the resources that live under a single project. (It's built fresh per call and is safe to share across threads.)
+
+```ruby
+scope = client.project(88_123_456)
+
+scope.contacts.list                       # GET  /Projects/{id}/contacts
+scope.contacts.add(OrgContactId: { Native: 5 }, Role: "Plaintiff")
+scope.contacts.remove(project_contact_id)
+
+scope.deadlines.create(Name: "Answer due", DueDate: "2026-07-01T00:00:00Z")
+scope.deadlines.update(id, DoneDate: "2026-06-15T00:00:00Z")
+
+scope.deadline_chains.list                # GET  /projects/{id}/deadlinechains
+scope.deadline_chains.create(Name: "Discovery")   # POST /Projects/{id}/DeadlineChains (note casing)
+
+scope.tasks.list                          # the project's task feed
+scope.notes.list                          # the project's note feed
+scope.notes.pin(note_id)
+scope.team.list                           # TeamMember entities
+scope.team.assign_roles(user_id, Roles: [{ OrgRoleId: { Native: 1 }, MakeFirst: true }])
+scope.appointments.create(Title: "Depo", StartUtc: "...", EndUtc: "...", Attendees: [...])
+scope.emails.add(From: { Address: "me@firm.com" }, To: [{ Address: "x@y.com" }], Subject: "Hi")
+scope.documents.add(document_id, folder_id: 9)   # attach an existing org document
+
+# Custom data: collection (sub-table) sections and static form sections, by selector
+scope.collections("Damages").list
+scope.collections("Damages").create(DataObject: { Amount: 5000 })
+scope.forms("intake").update(DataObject: { ... })   # freeform → raw hash
+
+scope.get                                 # the Project record itself
+scope.vitals                              # raw vitals array
+```
+
+| Sub-resource | Methods | Notes |
+|--------------|---------|-------|
+| `.contacts` | `list`, `add`, `update`, `remove` | project↔contact links (`ProjectContact`) |
+| `.deadlines` | `list`, `get`, `create`, `update`, `delete` | |
+| `.deadline_chains` | `list`, `get`, `create`, `update`, `delete`, `update_chain_date` | create path is capitalized `/Projects/.../DeadlineChains` |
+| `.tasks` | `list`, `pin`, `unpin` | project task feed |
+| `.notes` | `list`, `pin`, `unpin` | project note feed |
+| `.team` | `list`, `add`, `get`, `update`, `remove`, `assign_roles`, `teams`, `org_roles` | |
+| `.appointments` | `list`, `create`, `get`, `update`, `delete` | get/update/delete use the flat `/Appointments/{id}` path |
+| `.emails` | `list`, `add`, `add_encoded` | emails are notes; `From` is required |
+| `.documents` | `list`, `add` | `list` is the spec's deprecated per-project listing |
+| `.collections(selector)` | `list`, `get`, `create`, `update`, `delete` | custom sub-table data (freeform `DataObject`) |
+| `.forms(selector)` | `get`, `update` | static section data (raw hash) |
+
+Filevine's paths are case-sensitive and inconsistently cased; each sub-resource uses the exact casing from the spec (so some hit `/Projects` and others `/projects` — that's intentional, not a typo).
 
 ## Pagination
 

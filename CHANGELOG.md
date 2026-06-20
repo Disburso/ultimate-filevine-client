@@ -57,6 +57,20 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 - Comprehensive README: quick start, auth + bootstrap, multitenancy/concurrency,
   configuration options, pluggable token storage, resources, pagination, and the
   error hierarchy.
+- Project-scoped sub-resources via `client.project(id)` (a lightweight, immutable,
+  thread-safe `ProjectScope`):
+  - `contacts`, `deadlines`, `deadline_chains`, `tasks`, `notes`, `team`,
+    `appointments`, `emails`, `documents`, plus selector-based `collections(sel)`
+    and `forms(sel)`, and `get` / `vitals` / `add_guest_user` /
+    `toggle_section_visibility`.
+  - New entities: `ProjectContact`, `Deadline`, `DeadlineChain`, `TeamMember`,
+    `Appointment`, `CollectionItem` (Tasks/Notes/Documents reuse existing ones).
+  - Paths are taken verbatim from the spec, preserving its case-sensitive,
+    inconsistent casing (e.g. `/Projects/.../DeadlineChains` on create vs
+    `/projects/.../deadlinechains` elsewhere; the flat `/Appointments/{id}` for
+    single-appointment ops). Grounded against `docs/openapi/FV.App.API.json`.
+  - `Resources::Base` gained shared `post_entity` / `put_entity` / `delete_path`
+    helpers; `Resources::ProjectScoped` carries the project id for sub-resources.
 
 ### Changed
 - Raised the Ruby floor to `>= 3.2` to use `Data.define` for value objects.

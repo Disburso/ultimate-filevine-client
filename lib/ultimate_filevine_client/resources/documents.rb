@@ -15,10 +15,7 @@ module UltimateFilevineClient
       def update(document_id, attributes) = update_entity("#{PATH}/#{document_id}", Entities::Document, attributes)
 
       # @return [true] on success (a non-2xx response raises a RequestError).
-      def delete(document_id)
-        connection.delete("#{PATH}/#{document_id}")
-        true
-      end
+      def delete(document_id) = delete_path("#{PATH}/#{document_id}")
     end
   end
 end

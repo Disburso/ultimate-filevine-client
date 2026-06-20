@@ -31,10 +31,12 @@ Metrics/MethodLength:
 Metrics/AbcSize:
   Max: 20
 
-# `delete` performs a side effect and returns true on success; it is not a query.
+# These perform a side effect and return true on success; they are not queries.
 Naming/PredicateMethod:
   AllowedMethods:
     - delete
+    - delete_path
+    - toggle_section_visibility
 
 # Keyword-argument constructors (e.g. Configuration) are idiomatic and clear.
 Metrics/ParameterLists:

@@ -29,12 +29,32 @@ module UltimateFilevineClient
         entity.new(connection.get(path).body)
       end
 
-      def create_entity(path, entity, attributes)
-        entity.new(connection.post(path, body: attributes).body)
+      # POST, wrapping the response in `entity`. `attributes` may be nil for
+      # body-less action endpoints (e.g. pin/unpin); `params` adds query string.
+      def post_entity(path, entity, attributes = nil, params: nil)
+        entity.new(connection.post(path, **request_kwargs(attributes, params)).body)
+      end
+      alias create_entity post_entity
+
+      def put_entity(path, entity, attributes)
+        entity.new(connection.put(path, body: attributes).body)
       end
 
       def update_entity(path, entity, attributes)
         entity.new(connection.patch(path, body: attributes).body)
+      end
+
+      # DELETE returning true; a non-2xx response raises a RequestError.
+      def delete_path(path)
+        connection.delete(path)
+        true
+      end
+
+      def request_kwargs(body, params)
+        kwargs = {}
+        kwargs[:body] = body unless body.nil?
+        kwargs[:params] = params unless params.nil?
+        kwargs
       end
     end
   end

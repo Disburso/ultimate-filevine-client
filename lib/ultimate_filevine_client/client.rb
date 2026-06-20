@@ -53,6 +53,17 @@ module UltimateFilevineClient
       end
     end
 
+    # A project-scoped view exposing nested sub-resources (contacts, deadlines,
+    # tasks, team, etc.). Cheap and immutable — build one per call.
+    #
+    #   client.project(88_123_456).deadlines.list
+    #
+    # @param project_id [Integer, String] the Native project id
+    # @return [ProjectScope]
+    def project(project_id)
+      ProjectScope.new(self, project_id)
+    end
+
     # Bootstrap: resolve this credential's user and accessible orgs.
     # @return [Hash] parsed { "User" => ..., "Orgs" => [...] }
     def user_orgs
