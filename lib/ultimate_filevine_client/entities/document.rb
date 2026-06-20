@@ -8,7 +8,12 @@ module UltimateFilevineClient
       def filename = self["Filename"]
       def size = self["Size"]
       def folder_id = native_id("FolderId")
+      def folder_name = self["FolderName"]
       def project_id = native_id("ProjectId")
+      def uploader_id = native_id("UploaderId")
+      def upload_date = self["UploadDate"]
+      def current_version = self["CurrentVersion"]
+      def hashtags = self["Hashtags"]
     end
   end
 end

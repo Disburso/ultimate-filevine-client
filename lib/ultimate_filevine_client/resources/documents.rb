@@ -11,6 +11,11 @@ module UltimateFilevineClient
     # methods (create_upload_url, download_locator, batch_*) expose each step.
     class Documents < Base
       PATH = "/fv-app/v2/Documents"
+      # Sibling top-level paths (NOT under /Documents) for search/series/recent.
+      SEARCH_PATH = "/fv-app/v2/DocumentSearch"
+      RECENT_PATH = "/fv-app/v2/RecentlyOpenedDocuments"
+      SERIES_PATH = "/fv-app/v2/DocumentSeries"
+      SERIES_META_PATH = "/fv-app/v2/DocumentSeries/Meta"
 
       def initialize(client)
         super
@@ -23,6 +28,36 @@ module UltimateFilevineClient
 
       # @return [true] on success (a non-2xx response raises a RequestError).
       def delete(document_id) = delete_path("#{PATH}/#{document_id}")
+
+      # --- Search & listing (auto-paging Document collections) ---
+
+      # Search a project's documents by filename. `search_term` and `project_id`
+      # are required; pass `folder_id:` (native id only) or other filters via
+      # params. Offset/limit paged.
+      def search(search_term:, project_id:, limit: Pagination::DEFAULT_LIMIT, **params)
+        query = params.merge(searchTerm: search_term, projectId: project_id)
+        list_entities(SEARCH_PATH, Entities::Document, limit:, **query)
+      end
+
+      # Documents the current user has recently opened. `projectId:` (optional)
+      # scopes to a project; omitted, it spans the org (needs Org Admin).
+      def recent(limit: Pagination::DEFAULT_LIMIT, **params)
+        list_entities(RECENT_PATH, Entities::Document, limit:, **params)
+      end
+
+      # The document series feed (filterable by date range, project, folder, tag).
+      # Cursor-paged: the response's LastID is carried back as the next lastId.
+      def series(limit: Pagination::DEFAULT_LIMIT, **params)
+        cursor_paginate(
+          SERIES_PATH,
+          items_key: "Items", cursor_param: :lastId, next_cursor_key: "LastID",
+          params: params, limit: limit
+        ) { |item| Entities::Document.new(item) }
+      end
+
+      # Series metadata for the same filters: { "Count", "MinDocId", "MaxDocId" }
+      # (use MinDocId-1 as the first lastId, stop once LastID reaches MaxDocId).
+      def series_meta(**params) = connection.get(SERIES_META_PATH, params: params).body
 
       # --- High-level byte transfer ---
 
@@ -74,6 +109,25 @@ module UltimateFilevineClient
 
       def lock(document_id) = post_entity("#{PATH}/#{document_id}/lock", Entities::Document)
       def unlock(document_id) = post_entity("#{PATH}/#{document_id}/unlock", Entities::Document)
+
+      # --- Bulk folder/tag operations ---
+
+      # Copy documents and/or folders into a destination. `attributes` carries the
+      # required DestinationFolderId plus DocumentIds and/or FolderIds (Identifier
+      # objects). Returns the raw bulk-operation result ({ "Message", "Results" });
+      # inspect Results[].Status even on success — a 207 means partial failure.
+      def copy(attributes) = connection.post("#{PATH}/copy", body: attributes).body
+
+      # Move documents and/or folders. Same body and result shape as #copy.
+      def move(attributes) = connection.post("#{PATH}/move", body: attributes).body
+
+      # Bulk-remove a tag from the given documents. `document_ids` are Identifier
+      # objects. Returns nil on full success (204) or the multi-status result hash
+      # when some documents fail (207).
+      def remove_tag(tag_name, document_ids:)
+        body = connection.delete("#{PATH}/tags/#{tag_name}", body: { DocumentIds: document_ids }).body
+        body unless body.nil? || body == ""
+      end
 
       private
 

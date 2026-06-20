@@ -111,6 +111,18 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
     `projects_access`. New `Entities::Team`.
   - Added a `Resources::Base#perform_action` helper for 204/no-content writes;
     `delete_path`, `delete_batch`, and `remove_tag` now route through it.
+- Documents-family extras on `client.documents` beyond CRUD + byte transfer:
+  - `search` (filename search within a project; `searchTerm` + `projectId`
+    required) and `recent` (recently-opened) — both auto-paging `Document`s.
+  - `series` (the document series feed) — cursor-paged via the `CursorPaginator`
+    (response `LastID` carried back as the next `lastId`) — and `series_meta`,
+    the raw `{ Count, MinDocId, MaxDocId }` bootstrap counts.
+  - `copy` / `move` (bulk folder operations; `DestinationFolderId` + `DocumentIds`
+    and/or `FolderIds`) returning the raw multi-status result (copy is `201`, move
+    `200`, either may `207`), and `remove_tag` (bulk tag removal; `nil` on `204`
+    or the multi-status hash on `207`, mirroring `projects.remove_tag`).
+  - `Entities::Document` gained `folder_name`, `uploader_id`, `upload_date`,
+    `current_version`, and `hashtags`.
 - Projects-family extras on `client.projects` beyond core CRUD:
   - `archive` (the spec's lowercase `DELETE /projects/{projectid}` — a soft
     delete), `remove_tag` (bulk tag removal; returns `nil` on full success or the

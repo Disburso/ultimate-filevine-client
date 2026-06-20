@@ -108,7 +108,7 @@ Each resource hangs off the client and returns entity objects (raw payload alway
 |----------|---------|------|
 | `client.projects` | `list`, `get`, `create`, `update`, `archive`, `remove_tag`, `add_hashtag`, `bulk_update_clients`, `conflict_check` | `/fv-app/v2/Projects` |
 | `client.contacts` | `list`, `get`, `create`, `update`; sub-lists `addresses`, `emails`, `phones`, `projects`; `countries`, `primary_languages`, `remove_tag` | `/fv-app/v2/Contacts` |
-| `client.documents` | `list`, `get`, `update`, `delete`; `upload`, `download`; `create_upload_url`, `download_locator`, `batch_upload`, `confirm_upload`, `batch_download`, `add_revision`, `lock`, `unlock` | `/fv-app/v2/Documents` |
+| `client.documents` | `list`, `get`, `update`, `delete`; `search`, `recent`, `series`, `series_meta`; `copy`, `move`, `remove_tag`; `upload`, `download`; `create_upload_url`, `download_locator`, `batch_upload`, `confirm_upload`, `batch_download`, `add_revision`, `lock`, `unlock` | `/fv-app/v2/Documents` |
 | `client.notes` | `list`, `get`, `create`, `update` | `/fv-app/v2/Notes` |
 | `client.tasks` | `list`, `get`, `create`, `update`, `assign`, `unassign`, `complete`, `uncomplete`, `snooze`, `pin`, `unpin` | `/fv-app/v2/tasks` |
 | `client.project_types` | `list`, `get`, `sections` | `/fv-app/v2/ProjectTypes` |
@@ -237,6 +237,22 @@ File.binwrite("out.pdf", bytes)
 ```
 
 `upload` accepts a String of bytes or any object responding to `#read` (pass binary data). The lower-level steps are exposed too — `create_upload_url`, `download_locator`, `batch_upload` + `confirm_upload`, `batch_download`, `add_revision`, `lock` / `unlock` — for callers that need to drive the flow themselves. A failed S3 transfer raises `UltimateFilevineClient::TransferError` (the presigned signature is stripped from the message).
+
+### Finding & organizing documents
+
+```ruby
+# Filename search within a project (searchTerm + projectId are required), auto-paged:
+client.documents.search(search_term: "complaint", project_id: 88_123_456).each { |d| puts d.filename }
+client.documents.recent(projectId: 88_123_456).first        # documents you recently opened
+client.documents.series(projectId: 88_123_456).take(100)    # the doc series feed (cursor-paged)
+client.documents.series_meta(projectId: 88_123_456)         # => { "Count", "MinDocId", "MaxDocId" }
+
+# Bulk copy/move (DestinationFolderId required; pass DocumentIds and/or FolderIds).
+# Returns a bulk-operation result — check Results[].Status (a 207 means partial failure):
+client.documents.copy(DestinationFolderId: { Native: 12 }, DocumentIds: [{ Native: 3 }])
+client.documents.move(DestinationFolderId: { Native: 12 }, FolderIds: [{ Native: 7 }])
+client.documents.remove_tag("draft", document_ids: [{ Native: 3 }]) # nil on full success, hash on 207
+```
 
 ## Pagination
 
