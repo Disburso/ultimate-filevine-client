@@ -112,6 +112,8 @@ Each resource hangs off the client and returns entity objects (raw payload alway
 | `client.notes` | `list`, `get`, `create`, `update` | `/fv-app/v2/Notes` |
 | `client.tasks` | `list`, `get` | `/fv-app/v2/tasks` |
 | `client.project_types` | `list`, `get`, `sections` | `/fv-app/v2/ProjectTypes` |
+| `client.folders` | `list`, `get`, `create`, `update`, `delete`, `children`, `structure` | `/fv-app/v2/Folders` |
+| `client.users` | `list`, `me`, `get`, `delete`, `tasks`, `appointments`, `projects_access`, `recent_projects` | `/fv-app/v2/Users` |
 
 ```ruby
 project = client.projects.get(88_123_456)
@@ -123,6 +125,11 @@ client.contacts.create(FirstName: "Jane", LastName: "Smith")
 client.notes.update(42, Body: "Updated note body")
 client.documents.delete(7) # => true (raises on failure)
 client.project_types.sections(4).each { |section| ... }
+
+client.folders.children(folder_id).each { |f| ... }   # page a folder's contents
+client.folders.structure(project_id)                  # whole tree for a project
+client.users.me                                       # the current API/service user
+client.users.tasks(user_id).first                     # a user's task feed
 ```
 
 ### Project-scoped sub-resources

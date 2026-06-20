@@ -71,6 +71,16 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
     single-appointment ops). Grounded against `docs/openapi/FV.App.API.json`.
   - `Resources::Base` gained shared `post_entity` / `put_entity` / `delete_path`
     helpers; `Resources::ProjectScoped` carries the project id for sub-resources.
+- Org-level `Folders` and `Users` resources:
+  - `client.folders` — `list` / `get` / `create` / `update` / `delete`, plus
+    `children` (page one folder) and `structure(project_id)` (whole tree); new
+    `Entities::Folder`.
+  - `client.users` — `list` / `me` / `get` / `delete`, plus auto-paging `tasks`,
+    `appointments`, `projects_access`, and `recent_projects` (a bare,
+    non-paginated array); new `Entities::User` (wraps the OrgUser record).
+  - Casing taken verbatim from the spec: `/Users` and `/Users/Me` are
+    capitalized while per-user reads use lowercase `/users/{id}`; folders are
+    capitalized with a lowercase `/Folders/list` structure endpoint.
 
 ### Changed
 - Raised the Ruby floor to `>= 3.2` to use `Data.define` for value objects.
