@@ -111,6 +111,16 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
     `projects_access`. New `Entities::Team`.
   - Added a `Resources::Base#perform_action` helper for 204/no-content writes;
     `delete_path`, `delete_batch`, and `remove_tag` now route through it.
+- Projects-family extras on `client.projects` beyond core CRUD:
+  - `archive` (the spec's lowercase `DELETE /projects/{projectid}` — a soft
+    delete), `remove_tag` (bulk tag removal; returns `nil` on full success or the
+    multi-status hash on a `207`), `add_hashtag` (applies a hashtag to
+    projects/docs/notes/comments, returning a new `Entities::Hashtag` with usage
+    counts), `bulk_update_clients` (`PUT /projects/bulk`), and `conflict_check`
+    (`POST /Utils/conflictcheck/...` with a `searchTerm` query — not idempotent).
+  - `ProjectScope` gained `archive` and `conflict_check(search_term)` delegators.
+  - Paths preserve the family's inconsistent casing verbatim (capital `/Projects`
+    for tag removal, capital `/Utils`, lowercase `/projects` for archive/bulk).
 - Full Task CRUD + lifecycle on `client.tasks` (previously read-only):
   - `create`, `update` (body only), and `unassign` — the spec's `DELETE` on a
     task, which returns the now-unassigned task rather than no content.

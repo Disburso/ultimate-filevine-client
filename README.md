@@ -106,7 +106,7 @@ Each resource hangs off the client and returns entity objects (raw payload alway
 
 | Accessor | Methods | Path |
 |----------|---------|------|
-| `client.projects` | `list`, `get`, `create`, `update` | `/fv-app/v2/Projects` |
+| `client.projects` | `list`, `get`, `create`, `update`, `archive`, `remove_tag`, `add_hashtag`, `bulk_update_clients`, `conflict_check` | `/fv-app/v2/Projects` |
 | `client.contacts` | `list`, `get`, `create`, `update`; sub-lists `addresses`, `emails`, `phones`, `projects`; `countries`, `primary_languages`, `remove_tag` | `/fv-app/v2/Contacts` |
 | `client.documents` | `list`, `get`, `update`, `delete`; `upload`, `download`; `create_upload_url`, `download_locator`, `batch_upload`, `confirm_upload`, `batch_download`, `add_revision`, `lock`, `unlock` | `/fv-app/v2/Documents` |
 | `client.notes` | `list`, `get`, `create`, `update` | `/fv-app/v2/Notes` |
@@ -126,6 +126,12 @@ project = client.projects.get(88_123_456)
 project.name              # => "Smith v. Acme"
 project.client_name       # => "Jane Smith"
 project["ProjectTypeCode"] # raw field access
+
+client.projects.archive(88_123_456)                 # soft-delete (lowercase /projects path)
+client.projects.add_hashtag("big-case", projects: [{ Native: 88_123_456 }])  # returns a Hashtag w/ counts
+client.projects.remove_tag("urgent", project_ids: [{ Native: 1 }, { Native: 2 }]) # nil on full success, hash on 207
+client.projects.bulk_update_clients([{ ProjectId: { Native: 1 }, PersonId: { Native: 9 } }])
+client.projects.conflict_check(88_123_456, "Smith")  # raw results; NOT idempotent (persists a record)
 
 client.contacts.create(FirstName: "Jane", LastName: "Smith")
 client.contacts.phones(contact_id).each { |p| puts p.number }   # per-contact sub-list
@@ -194,6 +200,8 @@ scope.forms("intake").update(DataObject: { ... })   # freeform → raw hash
 
 scope.get                                 # the Project record itself
 scope.vitals                              # raw vitals array
+scope.archive                             # archive this project
+scope.conflict_check("Smith")             # run a conflict check on this project
 ```
 
 | Sub-resource | Methods | Notes |

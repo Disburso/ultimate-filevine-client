@@ -41,6 +41,13 @@ module UltimateFilevineClient
     # The project record itself (GET /fv-app/v2/Projects/{id}).
     def get = @client.projects.get(@id)
 
+    # Archive this project. Returns true on success.
+    def archive = @client.projects.archive(@id)
+
+    # Run a conflict check on this project for `search_term` (raw result). Not
+    # idempotent — each call persists a new conflict-check record.
+    def conflict_check(search_term) = @client.projects.conflict_check(@id, search_term)
+
     # Project vitals — an untyped array of vital fields (raw).
     def vitals = connection.get("/fv-app/v2/Projects/#{@id}/Vitals").body
 
