@@ -1,5 +1,7 @@
 # ultimate-filevine-client
 
+[![CI](https://github.com/Disburso/ultimate-filevine-client/actions/workflows/ci.yml/badge.svg)](https://github.com/Disburso/ultimate-filevine-client/actions/workflows/ci.yml)
+
 A thread-safe, multitenant-friendly Ruby client for the [Filevine v2 API](https://developer.filevine.io/docs/v2-us) (US environment first; CA/CJIS later).
 
 Built for applications that talk to Filevine on behalf of **many tenants concurrently**: each tenant gets its own client instance with its own credentials and isolated token cache. There is intentionally **no global configuration**.
