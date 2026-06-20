@@ -37,13 +37,14 @@ module UltimateFilevineClient
       deadline_chain_types: Resources::DeadlineChainTypes
     }.freeze
 
-    attr_reader :config, :authenticator, :connection
+    attr_reader :config, :authenticator, :connection, :billing
 
     def initialize(config:)
       @config = config
       @authenticator = Auth::Authenticator.new(config: config)
       @connection = Connection.new(config: config, authenticator: @authenticator)
       @resources = RESOURCES.transform_values { |klass| klass.new(self) }
+      @billing = Billing.new(self)
     end
 
     # A valid bearer token for this tenant, minted/refreshed as needed.

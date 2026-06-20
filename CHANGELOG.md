@@ -181,6 +181,34 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
     response body), and the `x-fv-orgid`/`x-fv-userid` tenant ids; blanks the
     token-exchange request body and drops cookies. Requests match on
     method+path+query so committed cassettes replay under dummy credentials.
+- Full **billing** suite behind a `client.billing` facade (10 sub-resources),
+  covering the current (non-deprecated) endpoints of all ten billing families:
+  - `client.billing.invoices` — list (org or per-project), get, create/update/
+    delete on a project, finalize, pdf, plus the lifecycle writes
+    (update_description/update_status, void, write_off, approve, mark_as_sent,
+    send_for_approval).
+  - `client.billing.items` — billing items (list org/project, get, create,
+    update, delete), notes (set_note/remove_note), attachments
+    (add/remove_attachments), and accounting_sync.
+  - `client.billing.transactions` — payments and refunds (list, get,
+    create_payment, create_and_apply_payment, update_payment, create_refund,
+    update_refund, void, unapply_payment, apply_payment).
+  - `client.billing.funds` — project trust funds (balance, list, get, create,
+    void).
+  - `client.billing.rate_schedules` — CRUD, set_for_project, set_timekeeper, and
+    flat-fee templates.
+  - `client.billing.invoice_templates` — CRUD plus org/project default toggles.
+  - `client.billing.codes`, `client.billing.settings`,
+    `client.billing.fv_payments`, `client.billing.timekeeper_classifications` —
+    billing codes, settings/vitals, FV Payments links + account mappings, and
+    timekeeper classifications.
+  - New entities: `Invoice`, `BillingItem`, `Transaction`, `ProjectFund`,
+    `RateSchedule`, `InvoiceTemplate` (settings/vitals/links/reference lists stay
+    raw). Project-centric billing is also exposed, project-id bound, on
+    `client.project(id)` (`invoices`, `billing_items`, `funds`, `transactions`,
+    `billing_settings`, `billing_vitals`). Paths are verbatim from the spec
+    (the family mixes `/Billing`, `/billing`, and `/billingitem` casing); the
+    `[Deprecated]` duplicate endpoints are intentionally omitted.
 
 ### Changed
 - Raised the Ruby floor to `>= 3.2` to use `Data.define` for value objects.

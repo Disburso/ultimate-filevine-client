@@ -6,7 +6,7 @@ A thread-safe, multitenant-friendly Ruby client for the [Filevine v2 API](https:
 
 Built for applications that talk to Filevine on behalf of **many tenants concurrently**: each tenant gets its own client instance with its own credentials and isolated token cache. There is intentionally **no global configuration**.
 
-> **Status: in active development.** Auth, the gateway connection, pagination, the org-level resources (Projects / Contacts / Documents / Notes / Tasks / Project Types), and the project-scoped sub-resources (`client.project(id).…`) are implemented and tested. More resources and a Redis-backed token store are planned. See `docs/openapi/API_SURFACE.md` for the full API surface.
+> **Status: in active development.** Auth, the gateway connection, pagination, the org-level resources (Projects / Contacts / Documents / Notes / Tasks / Project Types), the project-scoped sub-resources (`client.project(id).…`), and the full **billing** suite (`client.billing.…`) are implemented and tested. More resources (webhooks, custom fields) and a Redis-backed token store are planned. See `docs/openapi/API_SURFACE.md` for the full API surface.
 
 ## Installation
 
@@ -230,6 +230,13 @@ scope.conflict_check("Smith")             # run a conflict check on this project
 | `.documents` | `list`, `add` | `list` is the spec's deprecated per-project listing |
 | `.collections(selector)` | `list`, `get`, `create`, `update`, `delete` | custom sub-table data (freeform `DataObject`) |
 | `.forms(selector)` | `get`, `update` | static section data (raw hash) |
+| `.invoices` | `list`, `get`, `create`, `update`, `delete`, `finalize` | billing — delegates to `client.billing.invoices` |
+| `.billing_items` | `list`, `get`, `create`, `update` | billing — delegates to `client.billing.items` |
+| `.funds` | `balance`, `list`, `get`, `create`, `void` | billing — delegates to `client.billing.funds` |
+| `.transactions` | `list`, `create_payment`, `create_refund`, `update_payment`, `update_refund`, `void` | billing |
+| `.billing_settings` | `get`, `update`, `vitals`, `fund_settings`, `update_fund_settings`, `client_matter_id`, `set_client_matter_id` | billing |
+
+`client.project(id)` also exposes `.billing_vitals` (the project's billing vitals).
 
 Filevine's paths are case-sensitive and inconsistently cased; each sub-resource uses the exact casing from the spec (so some hit `/Projects` and others `/projects` — that's intentional, not a typo).
 
@@ -266,6 +273,52 @@ client.documents.copy(DestinationFolderId: { Native: 12 }, DocumentIds: [{ Nativ
 client.documents.move(DestinationFolderId: { Native: 12 }, FolderIds: [{ Native: 7 }])
 client.documents.remove_tag("draft", document_ids: [{ Native: 3 }]) # nil on full success, hash on 207
 ```
+
+## Billing
+
+The billing suite hangs off a single facade, `client.billing`, which groups the billing sub-resources. Filevine's billing area is large and carries many `[Deprecated]` duplicates; this client implements the **current** endpoints only (the deprecated old/new pairs — e.g. `PUT /billing/invoices` — are intentionally omitted in favor of their replacements).
+
+```ruby
+# Invoices: list (org-wide or per project), then drive the lifecycle.
+client.billing.invoices.list(project_id: 88_123_456, status: "Sent").each { |inv| puts inv.number }
+invoice = client.billing.invoices.create(88_123_456, BillingItems: %w[item-guid-1 item-guid-2])
+client.billing.invoices.finalize(88_123_456, invoice.id, tz_offset: -300)
+client.billing.invoices.approve(invoice.id)
+client.billing.invoices.mark_as_sent(invoice.id)
+
+# Billing items (time / expense / flat fee):
+item = client.billing.items.create(88_123_456, BillingType: "Time", IsBillable: true,
+                                   IsChargeable: true, Date: "2026-07-01", Description: "Drafting", Quantity: 1.5)
+client.billing.items.add_attachments(item.id, project_id: 88_123_456, doc_ids: [7])
+
+# Payments & refunds (the "Transactions" family):
+payment = client.billing.transactions.create_payment(88_123_456, Date: "2026-07-01", Total: 500, Method: "Check")
+client.billing.transactions.apply_payment(invoice_id: invoice.id, transaction_id: payment.id, amount: 500)
+client.billing.transactions.create_refund(88_123_456, Date: "2026-07-02", Total: 100, Method: "Check")
+
+# Project trust funds, rate schedules, settings & vitals:
+client.billing.funds.balance(88_123_456)
+client.billing.funds.create(88_123_456, Amount: 1_000, FundType: 0)   # 0=Deposit
+client.billing.rate_schedules.list.each { |r| puts r.name }
+client.billing.settings.vitals(88_123_456)   # { "CurrentBalance", "InProgressBalance", "ProjectFundsBalance" }
+```
+
+| Accessor | Selected methods |
+|----------|------------------|
+| `client.billing.invoices` | `list(project_id:)`, `get`, `create`, `update`, `delete`, `finalize`, `pdf`, `update_description`, `update_status`, `void`, `write_off`, `approve`, `mark_as_sent`, `send_for_approval` |
+| `client.billing.items` | `list(project_id:)`, `get`, `create`, `update`, `delete`, `set_note`, `remove_note`, `add_attachments`, `remove_attachments`, `accounting_sync` |
+| `client.billing.transactions` | `list`, `get`, `create_payment`, `create_and_apply_payment`, `update_payment`, `create_refund`, `update_refund`, `void`, `unapply_payment`, `apply_payment` |
+| `client.billing.funds` | `balance`, `list`, `get`, `create`, `void` |
+| `client.billing.rate_schedules` | `list`, `get`, `create`, `update`, `delete`, `set_for_project`, `set_timekeeper`, `create_flat_fee_template`, `update_flat_fee_template`, `delete_flat_fee_template` |
+| `client.billing.invoice_templates` | `list`, `get`, `create`, `update`, `delete`, `set_org_default`, `unset_org_default`, `project_default`, `set_project_default`, `unset_project_default` |
+| `client.billing.codes` | `org`, `project`, `add_to_set` |
+| `client.billing.settings` | `org`, `get`, `update`, `vitals`, `client_matter_id`, `set_client_matter_id`, `fund_settings`, `update_fund_settings` |
+| `client.billing.fv_payments` | `invoice_payment_link`, `project_payment_link`, `account_mappings`, `available_account_mappings`, `project_account_mappings` |
+| `client.billing.timekeeper_classifications` | `list` |
+
+Invoices, billing items, transactions, project funds, rate schedules, and invoice templates return typed entities (`Entities::Invoice`, `BillingItem`, `Transaction`, `ProjectFund`, `RateSchedule`, `InvoiceTemplate`); settings, vitals, payment links, deposit-destination mappings, billing codes, and timekeeper classifications are configuration/reference blobs and come back as raw hashes/arrays. The project-centric resources are also reachable, project-id bound, via `client.project(id)` (`.invoices`, `.billing_items`, `.funds`, `.transactions`, `.billing_settings`, `.billing_vitals`).
+
+As elsewhere, billing paths are taken verbatim from the spec — the casing is genuinely inconsistent across the family (e.g. transaction *reads* use capitalized `/Billing` while payment *writes* use lowercase `/billing`), so that is intentional, not a typo.
 
 ## Pagination
 

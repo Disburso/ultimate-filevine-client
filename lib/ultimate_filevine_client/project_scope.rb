@@ -22,7 +22,12 @@ module UltimateFilevineClient
       deadline_chains: Resources::ProjectDeadlineChains,
       team: Resources::ProjectTeam,
       appointments: Resources::ProjectAppointments,
-      emails: Resources::ProjectEmails
+      emails: Resources::ProjectEmails,
+      invoices: Resources::Billing::ProjectInvoices,
+      billing_items: Resources::Billing::ProjectBillingItems,
+      funds: Resources::Billing::ProjectFunds,
+      transactions: Resources::Billing::ProjectTransactions,
+      billing_settings: Resources::Billing::ProjectBillingSettings
     }.freeze
 
     # The project's Native id.
@@ -50,6 +55,10 @@ module UltimateFilevineClient
 
     # Project vitals — an untyped array of vital fields (raw).
     def vitals = connection.get("/fv-app/v2/Projects/#{@id}/Vitals").body
+
+    # This project's billing vitals ({ "CurrentBalance", "InProgressBalance",
+    # "ProjectFundsBalance" }, raw).
+    def billing_vitals = @client.billing.settings.vitals(@id)
 
     # Custom collection (sub-table) for a section selector.
     def collections(selector) = Resources::ProjectCollections.new(@client, @id, selector)
