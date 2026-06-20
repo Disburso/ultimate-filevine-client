@@ -40,9 +40,12 @@ module UltimateFilevineClient
       def primary_languages = connection.get("#{PATH}/PrimaryLanguages").body
 
       # Bulk-remove a tag from the given contacts. `person_ids` are Identifier
-      # objects (e.g. { Native: 5 }). Returns true on success.
+      # objects (e.g. { Native: 5 }). Like Projects/Notes #remove_tag, this
+      # endpoint returns a 207 multi-status body on partial failure, so it
+      # returns nil on full success (204) or the multi-status result hash on a
+      # 207 (which lists the contacts that were not de-tagged).
       def remove_tag(tag_name, person_ids:)
-        perform_action(:delete, "#{PATH}/tags/#{tag_name}", body: { PersonIds: person_ids })
+        bulk_request(:delete, "#{PATH}/tags/#{tag_name}", body: { PersonIds: person_ids })
       end
     end
   end

@@ -6,6 +6,33 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+### Changed
+- Token cache key now incorporates a SHA-256 fingerprint of the client secret,
+  scope, and PAT (in addition to region + client_id). Configurations that share
+  a `client_id` but differ in secret/scope/PAT (e.g. one OAuth app with per-user
+  PATs) no longer collide on — and can no longer be served — another
+  credential's cached bearer token, which matters most with a shared
+  cross-process store. The key stays stable across org/user bootstrap; existing
+  store entries change shape on upgrade and are simply re-minted.
+- Transient-failure auto-retries are restricted to read-only methods
+  (GET/HEAD/OPTIONS). PUT/DELETE are no longer auto-retried, since Filevine
+  exposes non-idempotent actions over them (project-fund void, AccountingSync,
+  rate-schedule assignment); a 429/5xx on a write is surfaced for the caller
+  instead of risking a silent double-apply.
+- `Contacts#remove_tag` now returns nil on a 204 full success or the
+  multi-status hash on a 207 partial failure (matching `Projects`/`Notes`),
+  instead of always returning true and discarding the per-contact failure list.
+- `Entities::Base#to_h` returns a shallow copy, so mutating the result can't
+  corrupt the entity's state or destabilize `#==`/`#hash`.
+
+### Fixed
+- Gateway responses with a malformed or mislabeled (`application/json`) body no
+  longer leak a raw `Faraday::ParsingError`. The body is decoded after status
+  mapping, so a 5xx with a bad body raises a typed `ServerError` with the status
+  and raw body preserved, and other transport/TLS errors (e.g. an SSL handshake
+  failure) are wrapped as gem errors — restoring the "rescue
+  `UltimateFilevineClient::Error` catches everything" guarantee.
+
 ### Added
 - Initial gem scaffold: gemspec, Bundler `Gemfile`, `Rakefile` (`spec` + `rubocop`),
   RSpec with WebMock/VCR, RuboCop config, `bin/console` + `bin/setup`, `.env.example`.

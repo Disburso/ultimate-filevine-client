@@ -15,8 +15,11 @@ module UltimateFilevineClient
         @attributes[key.to_s]
       end
 
+      # A shallow copy of the raw payload. Copying keeps the entity a read-only
+      # wrapper: mutating the returned hash can't corrupt the entity's state or
+      # destabilize {#hash}/{#==}.
       def to_h
-        @attributes
+        @attributes.dup
       end
 
       def ==(other)

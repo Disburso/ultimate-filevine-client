@@ -365,7 +365,7 @@ rescue UltimateFilevineClient::RateLimitError => e
 end
 ```
 
-Idempotent 429/5xx responses are retried automatically (honoring `Retry-After`); a `401` transparently re-mints the token and retries once.
+429/5xx responses are retried automatically only on read-only requests (`GET`/`HEAD`/`OPTIONS`, honoring `Retry-After`). Writes (`POST`/`PATCH`/`PUT`/`DELETE`) are never auto-retried — Filevine exposes non-idempotent actions over `PUT`/`DELETE` (e.g. fund void, `AccountingSync`), so a transient failure on a write is surfaced rather than risking a double-apply. A `401` transparently re-mints the token and retries once.
 
 ## Development
 

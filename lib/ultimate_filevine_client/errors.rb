@@ -7,7 +7,9 @@ module UltimateFilevineClient
   # Raised when a bearer token cannot be minted from the Filevine identity service.
   class AuthenticationError < Error; end
 
-  # Raised when a request times out or the connection fails (after retries).
+  # Raised when a request times out, the connection fails, or another transport
+  # /TLS error occurs (after retries) — i.e. any Faraday transport error that is
+  # not an HTTP status response.
   class TimeoutError < Error; end
 
   # Raised when a direct byte transfer to/from a presigned (S3) URL fails. The

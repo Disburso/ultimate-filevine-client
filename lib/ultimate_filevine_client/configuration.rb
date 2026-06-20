@@ -1,5 +1,7 @@
 # frozen_string_literal: true
 
+require "digest"
+
 module UltimateFilevineClient
   # Immutable, per-tenant configuration for a {Client}.
   #
@@ -44,11 +46,18 @@ module UltimateFilevineClient
       freeze
     end
 
-    # Per-tenant token cache key. The minted token depends only on the
-    # credentials (org/user are per-request headers, not part of minting), so the
-    # key is stable across org/user bootstrap.
+    # Per-tenant token cache key. The token minted at /connect/token is a
+    # function of region, client_id, client_secret, scope AND the PAT, so all of
+    # those feed the key: two configs that share a client_id but differ in
+    # secret/scope/PAT (e.g. one OAuth app with per-user PATs) must NOT collide
+    # on a cached token — that would serve a bearer minted from the wrong
+    # credentials, which matters most with a shared cross-process store. region +
+    # client_id stay readable for debuggability; the secret, scope, and PAT are
+    # folded into a SHA-256 fingerprint so nothing sensitive lands in the key.
+    # org/user are per-request headers (not part of minting), so the key is
+    # stable across org/user bootstrap.
     def token_key
-      "filevine:token:#{region}:#{credentials.client_id}"
+      "filevine:token:#{region}:#{credentials.client_id}:#{credentials_fingerprint}"
     end
 
     # Return a new frozen Configuration with the given overrides, reusing the
@@ -63,6 +72,14 @@ module UltimateFilevineClient
         pat: credentials.pat, region:, org_id:, user_id:, scope:, token_store:,
         adapter:, open_timeout:, timeout:, token_expiry_skew:, max_retries:, retry_interval:
       )
+    end
+
+    private
+
+    # SHA-256 of every secret minting input, so distinct credentials/scopes get
+    # distinct keys without exposing the secret or PAT in the key string.
+    def credentials_fingerprint
+      Digest::SHA256.hexdigest([credentials.client_secret, scope, credentials.pat].join("\0"))
     end
   end
 end
