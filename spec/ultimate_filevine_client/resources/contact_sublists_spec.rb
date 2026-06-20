@@ -69,11 +69,18 @@ RSpec.describe "Contact sub-lists" do # rubocop:disable RSpec/DescribeClass
     expect(client.contacts.primary_languages).to eq(%w[English Spanish])
   end
 
-  it "bulk-removes a tag from contacts via a DELETE with a body" do
+  it "bulk-removes a tag from contacts, returning nil on a 204 full success" do
     stub = stub_request(:delete, "#{base}/fv-app/v2/Contacts/tags/vip")
            .with(body: { "PersonIds" => [{ "Native" => 5 }] })
            .to_return(status: 204, body: "")
-    expect(client.contacts.remove_tag("vip", person_ids: [{ Native: 5 }])).to be(true)
+    expect(client.contacts.remove_tag("vip", person_ids: [{ Native: 5 }])).to be_nil
     expect(stub).to have_been_made.once
+  end
+
+  it "returns the multi-status body on a 207 partial failure (no longer swallowed)" do
+    body = { "Results" => [{ "PersonId" => { "Native" => 5 }, "Status" => 404 }] }
+    stub_request(:delete, "#{base}/fv-app/v2/Contacts/tags/vip")
+      .to_return(status: 207, headers: { "Content-Type" => "application/json" }, body: body.to_json)
+    expect(client.contacts.remove_tag("vip", person_ids: [{ Native: 5 }])).to eq(body)
   end
 end

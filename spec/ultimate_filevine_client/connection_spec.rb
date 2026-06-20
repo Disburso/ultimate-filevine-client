@@ -91,6 +91,20 @@ RSpec.describe UltimateFilevineClient::Connection do
       expect { build(max_retries: 0).get("/x") }
         .to raise_error(UltimateFilevineClient::RateLimitError) { |e| expect(e.retry_after).to eq("7") }
     end
+
+    it "maps a 5xx with a malformed/mislabeled JSON body to ServerError (no Faraday::ParsingError leak)" do
+      stub_request(:get, "#{base}/x")
+        .to_return(status: 503, headers: { "Content-Type" => "application/json" }, body: "<html>502 Bad Gateway</html>")
+      expect { build(max_retries: 0).get("/x") }
+        .to raise_error(UltimateFilevineClient::ServerError) { |e| expect(e.status).to eq(503) }
+    end
+
+    it "returns the raw body (not a parse error) for a 2xx whose body is not valid JSON" do
+      stub_request(:get, "#{base}/x")
+        .to_return(status: 200, headers: { "Content-Type" => "application/json" }, body: "{ not json")
+      response = build.get("/x")
+      expect([response.status, response.body]).to eq([200, "{ not json"])
+    end
   end
 
   describe "retry on transient failures" do
@@ -103,9 +117,32 @@ RSpec.describe UltimateFilevineClient::Connection do
       expect(a_request(:get, "#{base}/x")).to have_been_made.twice
     end
 
+    it "retries idempotent GETs on a 503 then succeeds" do
+      stub_request(:get, "#{base}/x")
+        .to_return(json({}, status: 503))
+        .then.to_return(json({ ok: true }))
+      response = build(max_retries: 2).get("/x")
+      expect(response.status).to eq(200)
+      expect(a_request(:get, "#{base}/x")).to have_been_made.twice
+    end
+
     it "wraps timeouts in TimeoutError" do
       stub_request(:get, "#{base}/x").to_timeout
       expect { build(max_retries: 0).get("/x") }.to raise_error(UltimateFilevineClient::TimeoutError)
+    end
+  end
+
+  # PUT/DELETE are HTTP-idempotent, but Filevine exposes non-idempotent ACTIONS
+  # over them (fund void, AccountingSync, ...), so writes must NOT be auto-retried
+  # — a transient 5xx after the action committed would otherwise double-apply it.
+  describe "non-idempotent writes are not auto-retried" do
+    %i[post patch put delete].each do |verb|
+      it "issues a #{verb.upcase} exactly once on a 503 and raises ServerError" do
+        stub_request(verb, "#{base}/x").to_return(json({}, status: 503))
+        expect { build(max_retries: 3).public_send(verb, "/x") }
+          .to raise_error(UltimateFilevineClient::ServerError)
+        expect(a_request(verb, "#{base}/x")).to have_been_made.once
+      end
     end
   end
 
