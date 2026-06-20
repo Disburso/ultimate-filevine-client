@@ -26,7 +26,11 @@ module UltimateFilevineClient
       tasks: Resources::Tasks,
       project_types: Resources::ProjectTypes,
       folders: Resources::Folders,
-      users: Resources::Users
+      users: Resources::Users,
+      appointments: Resources::Appointments,
+      comments: Resources::Comments,
+      share_links: Resources::ShareLinks,
+      reports: Resources::Reports
     }.freeze
 
     attr_reader :config, :authenticator, :connection

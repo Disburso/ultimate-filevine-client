@@ -20,6 +20,16 @@ module UltimateFilevineClient
         Pagination::Paginator.new(connection: connection, path: path, params: params, limit: limit, &wrap)
       end
 
+      # Keyset/cursor pagination (custom items key + opaque cursor) for the few
+      # endpoints that don't use the standard offset/limit + "Items" contract.
+      def cursor_paginate(path, items_key:, cursor_param:, next_cursor_key:,
+                          params: {}, limit: Pagination::DEFAULT_LIMIT, &wrap)
+        Pagination::CursorPaginator.new(
+          connection: connection, path: path, items_key: items_key, cursor_param: cursor_param,
+          next_cursor_key: next_cursor_key, params: params, limit: limit, &wrap
+        )
+      end
+
       # An auto-paging collection of `entity`-wrapped records.
       def list_entities(path, entity, limit: Pagination::DEFAULT_LIMIT, **params)
         paginate(path, params: params, limit: limit) { |item| entity.new(item) }

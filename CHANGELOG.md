@@ -81,6 +81,20 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   - Casing taken verbatim from the spec: `/Users` and `/Users/Me` are
     capitalized while per-user reads use lowercase `/users/{id}`; folders are
     capitalized with a lowercase `/Folders/list` structure endpoint.
+- Standalone org-level `Appointments`, `Comments`, `Share Links`, and `Reports`
+  resources:
+  - `client.appointments` — `get` / `update` / `delete` an appointment by id on
+    the flat `/Appointments/{id}` path (list/create stay project-scoped).
+  - `client.comments` — note-scoped `list` / `get` / `create` / `update` under
+    `/Notes/{noteId}/Comments`; new `Entities::Comment`.
+  - `client.share_links` — `list` (keyset/cursor paged), `get`, `delete`, and
+    `delete_batch` (bare-array body); new `Entities::ShareLink` (string-keyed).
+  - `client.reports` — `list` saved reports + `run` (returns the raw, untyped
+    result set); new `Entities::Report`.
+  - Added `Pagination::CursorPaginator` for keyset endpoints whose response
+    nests records under a custom key and advances via an opaque cursor (Share
+    Links: records under `ShareLinks`, `NewLastKey` -> `lastKey`), exposed via a
+    `Resources::Base#cursor_paginate` helper.
 
 ### Changed
 - Raised the Ruby floor to `>= 3.2` to use `Data.define` for value objects.

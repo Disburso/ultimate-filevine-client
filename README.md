@@ -114,6 +114,10 @@ Each resource hangs off the client and returns entity objects (raw payload alway
 | `client.project_types` | `list`, `get`, `sections` | `/fv-app/v2/ProjectTypes` |
 | `client.folders` | `list`, `get`, `create`, `update`, `delete`, `children`, `structure` | `/fv-app/v2/Folders` |
 | `client.users` | `list`, `me`, `get`, `delete`, `tasks`, `appointments`, `projects_access`, `recent_projects` | `/fv-app/v2/Users` |
+| `client.appointments` | `get`, `update`, `delete` | `/fv-app/v2/Appointments/{id}` |
+| `client.comments` | `list`, `get`, `create`, `update` (note-scoped) | `/fv-app/v2/Notes/{noteId}/Comments` |
+| `client.share_links` | `list`, `get`, `delete`, `delete_batch` | `/fv-app/v2/ShareLinks` |
+| `client.reports` | `list`, `run` | `/fv-app/v2/Reports` |
 
 ```ruby
 project = client.projects.get(88_123_456)
@@ -130,6 +134,12 @@ client.folders.children(folder_id).each { |f| ... }   # page a folder's contents
 client.folders.structure(project_id)                  # whole tree for a project
 client.users.me                                       # the current API/service user
 client.users.tasks(user_id).first                     # a user's task feed
+
+client.comments.list(note_id).each { |c| ... }        # comments are note-scoped
+client.comments.create(note_id, Body: "Looks good")
+client.share_links.list.each { |link| ... }           # cursor-paged automatically
+client.share_links.delete_batch(%w[key1 key2])
+client.reports.run(report_id, limit: 100)             # raw, untyped result set
 ```
 
 ### Project-scoped sub-resources
