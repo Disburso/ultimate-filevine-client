@@ -20,10 +20,7 @@ module UltimateFilevineClient
       def delete(link_key) = delete_path("#{PATH}/#{link_key}")
 
       # Delete several links at once. Body is a bare JSON array of link keys.
-      def delete_batch(link_keys)
-        connection.post("#{PATH}/DeleteBatch", body: Array(link_keys))
-        true
-      end
+      def delete_batch(link_keys) = perform_action(:post, "#{PATH}/DeleteBatch", body: Array(link_keys))
     end
   end
 end

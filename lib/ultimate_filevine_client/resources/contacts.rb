@@ -42,8 +42,7 @@ module UltimateFilevineClient
       # Bulk-remove a tag from the given contacts. `person_ids` are Identifier
       # objects (e.g. { Native: 5 }). Returns true on success.
       def remove_tag(tag_name, person_ids:)
-        connection.delete("#{PATH}/tags/#{tag_name}", body: { PersonIds: person_ids })
-        true
+        perform_action(:delete, "#{PATH}/tags/#{tag_name}", body: { PersonIds: person_ids })
       end
     end
   end

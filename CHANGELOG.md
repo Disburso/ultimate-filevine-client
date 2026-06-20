@@ -102,6 +102,15 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   - `countries` (code => name map) and `primary_languages` (string array) raw
     reference lists, and `remove_tag(tag_name, person_ids:)` (a DELETE with a
     body) for bulk tag removal.
+- Custom Contacts (`client.custom_contacts`) and org-level Teams (`client.teams`):
+  - `custom_contacts` — `meta`, `create`, `update` (delta/field-bag `requests`
+    array body; both return a `Contact`), and `tab` (freeform custom-data hash).
+  - `teams` — `list` (bare array of `Entities::Team`), `get`, `create`, plus the
+    action writes `add_members`, `remove_members`, `assign_member_roles`,
+    `add_project`, `remove_project`, `assign_to_projects`, and auto-paging
+    `projects_access`. New `Entities::Team`.
+  - Added a `Resources::Base#perform_action` helper for 204/no-content writes;
+    `delete_path`, `delete_batch`, and `remove_tag` now route through it.
 
 ### Changed
 - Raised the Ruby floor to `>= 3.2` to use `Data.define` for value objects.

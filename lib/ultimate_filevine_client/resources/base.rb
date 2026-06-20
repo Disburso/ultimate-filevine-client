@@ -54,11 +54,15 @@ module UltimateFilevineClient
         entity.new(connection.patch(path, body: attributes).body)
       end
 
-      # DELETE returning true; a non-2xx response raises a RequestError.
-      def delete_path(path)
-        connection.delete(path)
+      # Perform a write whose response body is not needed; returns true (a
+      # non-2xx response raises). For 204 / no-content action endpoints.
+      def perform_action(http_method, path, body: nil, params: nil)
+        connection.public_send(http_method, path, **request_kwargs(body, params))
         true
       end
+
+      # DELETE returning true; a non-2xx response raises a RequestError.
+      def delete_path(path) = perform_action(:delete, path)
 
       def request_kwargs(body, params)
         kwargs = {}

@@ -118,6 +118,8 @@ Each resource hangs off the client and returns entity objects (raw payload alway
 | `client.comments` | `list`, `get`, `create`, `update` (note-scoped) | `/fv-app/v2/Notes/{noteId}/Comments` |
 | `client.share_links` | `list`, `get`, `delete`, `delete_batch` | `/fv-app/v2/ShareLinks` |
 | `client.reports` | `list`, `run` | `/fv-app/v2/Reports` |
+| `client.custom_contacts` | `meta`, `create`, `update`, `tab` | `/fv-app/v2/Custom-Contacts` |
+| `client.teams` | `list`, `get`, `create`, `add_members`, `remove_members`, `assign_member_roles`, `projects_access`, `add_project`, `remove_project`, `assign_to_projects` | `/fv-app/v2/teams` |
 
 ```ruby
 project = client.projects.get(88_123_456)
@@ -142,6 +144,12 @@ client.comments.create(note_id, Body: "Looks good")
 client.share_links.list.each { |link| ... }           # cursor-paged automatically
 client.share_links.delete_batch(%w[key1 key2])
 client.reports.run(report_id, limit: 100)             # raw, untyped result set
+
+client.teams.list.each { |t| puts t.name }            # org teams (bare-array list)
+client.teams.add_members(team_id, UserIDs: [5], AccessLevel: 1)
+client.teams.add_project(team_id, project_id, apply_subscriptions: true)
+# Custom contacts use a delta/field-bag write model:
+client.custom_contacts.create(contact_id, [{ Action: "Add", Selector: "nickname", Value: "JJ" }])
 ```
 
 ### Project-scoped sub-resources

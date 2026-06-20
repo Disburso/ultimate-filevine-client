@@ -30,7 +30,9 @@ module UltimateFilevineClient
       appointments: Resources::Appointments,
       comments: Resources::Comments,
       share_links: Resources::ShareLinks,
-      reports: Resources::Reports
+      reports: Resources::Reports,
+      custom_contacts: Resources::CustomContacts,
+      teams: Resources::Teams
     }.freeze
 
     attr_reader :config, :authenticator, :connection

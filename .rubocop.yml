@@ -34,10 +34,7 @@ Metrics/AbcSize:
 # These perform a side effect and return true on success; they are not queries.
 Naming/PredicateMethod:
   AllowedMethods:
-    - delete
-    - delete_path
-    - delete_batch
-    - remove_tag
+    - perform_action
     - toggle_section_visibility
 
 # Keyword-argument constructors (e.g. Configuration) are idiomatic and clear.
